@@ -1,26 +1,57 @@
 {% extends "base_template.html" %}
-
-{% block title %}Tutorial Flask: Miniblog{% endblock %}
+{% block title %}Gestion{% endblock %}
 
 {% block content %}
-    <ul>
-    {% for post in post_pagination.items %}
-        <li><a href="{{ url_for('public.show_post', slug=post.title_slug) }}">{{ post.title }}</a></li>
-    {% else %}
-        <li>No hay entradas</li>
-    {% endfor %}
-    </ul>
-    <div class=pagination>
-        {%- for page in post_pagination.iter_pages() %}
-            {% if page %}
-                {% if page != post_pagination.page %}
-                    <a href="{{ url_for('public.index', page=page) }}">{{ page }}</a>
-                {% else %}
-                    <strong>{{ page }}</strong>
-                {% endif %}
-            {% else %}
-                <span class=ellipsis>…</span>
-            {% endif %}
-        {%- endfor %}
+<header>
+    <div class="logo-escuela">
+        <img src="{{ url_for('static', filename='images/image_1.png') }}" alt="Logo Escuela">
     </div>
+    <nav>
+        <ul style="list-style: none;">
+            <li><a href="#inicio">Inicio</a></li>
+            <li><a href="{{ url_for('public.calificaciones') }}">Calificaciones</a></li>
+        </ul>
+    </nav>
+    <div class="logo-mapa">
+        <img src="{{ url_for('static', filename='images/noto_world-map.png') }}" alt="Icono Mapa">
+    </div>
+</header>
+
+<main>
+    <section>
+        <div class="excelCont">
+            <table border="1" id="tabla" class="intTable">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Genero</th>
+                        <th>Nombre</th>
+                        <th>Status</th>
+                        <th>Grupo</th>
+                    </tr>
+                </thead>
+                <tbody id="contTabla" class="contTabla">
+                    {% for alum in alumno %}
+                    <tr>
+                        <td>{{ alum.id }}</td>
+                        <td>{{ alum.genero }}</td>
+                        <td>{{ alum.name }} {{ alum.lastname_p }} {{ alum.lastname_m }}</td>
+                        {% if alum.status == false %}
+                        <td>Baja</td>
+                        {% else %}
+                        <td>Inscrito</td>
+                        {% endif %}
+                        <td>{{ alum.grupo }} ° {{ alum.grado }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5">No hay alumnos registrados todavía</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <div style="clear:both"></div>
+</main>
 {% endblock %}

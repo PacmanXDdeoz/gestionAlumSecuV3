@@ -96,10 +96,18 @@ def run_migrations_online():
 
     connectable = get_engine()
 
+    def include_object(object, name, type_, reflected, compare_to):
+        if type_ == "table" and name == "blog_user":
+            return False
+        return True
+
+
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=get_metadata(),
+            include_schemas=True,
+            include_object=include_object,
             **conf_args
         )
 

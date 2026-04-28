@@ -1,0 +1,108 @@
+{% extends "base_template.html" %}
+{% block title %}Calificaciones{% endblock %}
+
+{% block content %}
+<header class="header-calificaciones">
+    <div class="logo-escuela">
+        <img src="{{ url_for('static', filename='images/image_1.png') }}" alt="Logo Escuela">
+    </div>
+
+    <div class="nav-buscador">
+        <a href="{{ url_for('public.index') }}" class="btn-inicio">Inicio</a>
+        <form action="{{ url_for('public.calificaciones') }}" class="form-busqueda" method="GET">
+            <label for="codigoAlumno" class="label-codigo">Código:</label>
+            <input type="text" id="codigoAlumno" name="codigoAlumno" placeholder="123456789"
+                value="{{ request.args.get('codigoAlumno', '') }}">
+            <button type="submit" id="btnBuscarCodigo">Buscar</button>
+        </form>
+    </div>
+
+    <div class="logo-mapa">
+        <img src="{{ url_for('static', filename='images/noto_world-map.png') }}" alt="Icono Mapa">
+    </div>
+</header>
+
+<main class="main-calificaciones">
+    <section class="boleta-container">
+        {% if alumno %}
+        <div class="boleta-card">
+            <p id="title-card" style="display: flex; justify-content: center;"></p>
+
+            <div class="boleta-header">
+                <p>Grupo: <strong><span id="student-grade">{{ alumno.grupo_info.grado }}</span>°<span
+                            id="student-group">{{ alumno.grupo_info.grupo }}</span></p></strong>
+                <p>Nombre: <strong><span id="student-name">{{ alumno.name }} {{ alumno.lastname_p }} {{ lastname_m
+                            }}</span></p></strong>
+            </div>
+
+            <table class="tabla-boleta">
+                <thead>
+                    <tr>
+                        <th>Materia</th>
+                        <th>Calificación</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="cont-calificaciones">
+                    {% if alumno.calificaciones %}
+                    <tr class="grade-value">
+                        <td>Español:</td>
+                        <td id="español">{{ alumno.calificaciones[0].español }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Matematicas:</td>
+                        <td id="matematicas">{{ alumno.calificaciones[0].matematicas }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Ciencias:</td>
+                        <td id="ciencias">{{ alumno.calificaciones[0].ciencias }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Geografía:</td>
+                        <td id="geografia">{{ alumno.calificaciones[0].geografia }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Historia:</td>
+                        <td id="historia">{{ alumno.calificaciones[0].historia }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Formación Civica y ética:</td>
+                        <td id="fcye">{{ alumno.calificaciones[0].f_civica }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Ingles:</td>
+                        <td id="ingles">{{ alumno.calificaciones[0].ingles }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Artes:</td>
+                        <td id="artes">{{ alumno.calificaciones[0].artes }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Fortalecimiento de Español:</td>
+                        <td id="fesp">{{ alumno.calificaciones[0].f_español }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Fortalecimiento de Matematicas:</td>
+                        <td id="fmate">{{ alumno.calificaciones[0].f_matematicas }}</td>
+                    </tr>
+                    <tr class="grade-value">
+                        <td> Tecnologia:</td>
+                        <td id="tecnologia">{{ alumno.calificaciones[0].tecnologia }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align: center;">Este alumno aún no tiene calificaciones registradas
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% elif request.args.get('codigoAlumno') %}
+        <div style="text-align: center; color: red; margin-top: 20px;">
+            <p>No se encontró ningún alumno con el código: <b>{{ request.args.get('codigoAlumno') }}</b></p>
+        </div>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}

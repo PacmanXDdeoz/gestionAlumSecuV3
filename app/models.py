@@ -5,76 +5,21 @@ from sqlalchemy.exc import IntegrityError
 
 from app import db
 
-
-class Post(db.Model):
+class Grupos(db.Model):
+    __tablename__='grupos'
+    __table_args__ = {'schema': 'alejandra'}
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('blog_user.id', ondelete='CASCADE'), nullable=False)
-    title = db.Column(db.String(256), nullable=False)
-    title_slug = db.Column(db.String(256), unique=True, nullable=False)
-    content = db.Column(db.Text)
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    comments = db.relationship('Comment', backref='post', lazy=True, cascade='all, delete-orphan',
-                               order_by='asc(Comment.created)')
+    grado = db.Column(db.String(1), nullable=False)
+    grupo = db.Column(db.String(1), nullable=False)
+
+    alumnos = db.relationship('Alumno', backref='grupo_info', lazy=True)
+
+    def __init__(self, grado, grupo):
+        self.grado = grado
+        self.grupo = grupo
 
     def __repr__(self):
-        return f'<Post {self.title}>'
-
-    def save(self):
-        if not self.id:
-            db.session.add(self)
-        if not self.title_slug:
-            self.title_slug = slugify(self.title)
-
-        saved = False
-        count = 0
-        while not saved:
-            try:
-                db.session.commit()
-                saved = True
-            except IntegrityError:
-                db.session.rollback()
-                db.session.add(self)
-                count += 1
-                self.title_slug = f'{slugify(self.title)}-{count}'
-
-    def delete(self):
-        db.session.delete(self)
-        db.session.commit()
-
-    @staticmethod
-    def get_by_slug(slug):
-        return Post.query.filter_by(title_slug=slug).first()
-
-    @staticmethod
-    def get_by_id(id):
-        return Post.query.get(id)
-
-    @staticmethod
-    def get_all():
-        return Post.query.all()
-
-    @staticmethod
-    def all_paginated(page=1, per_page=20):
-        return Post.query.order_by(Post.created.asc()). \
-            paginate(page=page, per_page=per_page, error_out=False)
-
-
-class Comment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('blog_user.id', ondelete='SET NULL'))
-    user_name = db.Column(db.String)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
-    content = db.Column(db.Text)
-    created = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-
-    def __init__(self, content, user_id=None, user_name=user_name, post_id=None):
-        self.content = content
-        self.user_id = user_id
-        self.user_name = user_name
-        self.post_id = post_id
-
-    def __repr__(self):
-        return f'<Comment {self.content}>'
+        return f'<Grupo {self.grado} {self.grupo}'
 
     def save(self):
         if not self.id:
@@ -85,6 +30,82 @@ class Comment(db.Model):
         db.session.delete(self)
         db.session.commit()
 
-    @staticmethod
-    def get_by_post_id(post_id):
-        return Comment.query.filter_by(post_id=post_id).all()
+
+class Alumno(db.Model):
+    __tablename__='alumnos'
+    __table_args__ = {'schema': 'alejandra'}
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    lastname_p = db.Column(db.String(50), nullable=False)
+    lastname_m = db.Column(db.String(50), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('alejandra.grupos.id'), nullable=False)
+    genero = db.Column(db.String(10), nullable=False)
+    status = db.Column(db.Boolean, nullable=False, default=True)
+
+    password = db.Column('pass', db.String(10), nullable=False)
+
+    calificaciones = db.Relationship('Calificacion', backref='alumno', lazy=True)
+
+    def __init__(self, name, lastname_p, lastname_m, group_id, genero, password, status=True):
+        self.name = name
+        self.lastname_p = lastname_p
+        self.lastname_m = lastname_m
+        self.group_id = group_id
+        self.genero = genero
+        self.status = status
+        self.password = password
+
+    def __repr__(self):
+        return f'<Alumno {self.name} {self.lastname_p}>'
+
+    def save(self):
+        if not self.id:
+            db.session.add(self)
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+class Calificacion(db.Model):
+    __tablename__ = 'calificaciones'
+    __table_args__ = {'schema': 'alejandra'}
+    
+    id = db.Column(db.Integer, primary_key=True)
+    alumnos_id = db.Column(db.Integer, db.ForeignKey('alejandra.alumnos.id'), nullable=False) 
+    español = db.Column(db.Numeric)
+    matematicas = db.Column(db.Numeric)
+    ciencias = db.Column(db.Numeric)
+    geografia = db.Column(db.Numeric)
+    historia = db.Column(db.Numeric)
+    f_civica = db.Column(db.Numeric)
+    ingles = db.Column(db.Numeric)
+    artes = db.Column(db.Numeric)
+    f_español = db.Column(db.Numeric)
+    f_matematicas = db.Column(db.Numeric)
+    tecnologia = db.Column(db.Numeric)
+    def __init__(self, alumnos_id, español=None, matematicas=None, ciencias=None, 
+                 geografia=None, historia=None, f_civica=None, ingles=None, 
+                 artes=None, f_español=None, f_matematicas=None, tecnologia=None):
+        self.alumnos_id = alumnos_id
+        self.español = español
+        self.matematicas = matematicas
+        self.ciencias = ciencias
+        self.geografia = geografia
+        self.historia = historia
+        self.f_civica = f_civica
+        self.ingles = ingles
+        self.artes = artes
+        self.f_español = f_español
+        self.f_matematicas = f_matematicas
+        self.tecnologia = tecnologia
+    def __repr__(self):
+        return f'<Calificaciones del Alumno_ID: {self.alumnos_id}>'
+        
+    def save(self):
+        if not self.id:
+            db.session.add(self)
+        db.session.commit()
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
