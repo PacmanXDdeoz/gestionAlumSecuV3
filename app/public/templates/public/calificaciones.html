@@ -17,8 +17,9 @@
         </form>
     </div>
 
-    <div class="logo-mapa">
-        <img src="{{ url_for('static', filename='images/noto_world-map.png') }}" alt="Icono Mapa">
+    <div class="auth-actions">
+        <a href="{{ url_for('auth.login') }}" class="btn-auth">Login</a>
+        <button type="button" id="btnEscanearQr" class="btn-auth">Escanear QR</button>
     </div>
 </header>
 
@@ -33,6 +34,11 @@
                             id="student-group">{{ alumno.grupo_info.grupo }}</span></p></strong>
                 <p>Nombre: <strong><span id="student-name">{{ alumno.name }} {{ alumno.lastname_p }} {{ lastname_m
                             }}</span></p></strong>
+            </div>
+
+            <div class="filtro-calificaciones">
+                <label for="filtroCalificaciones" class="label-filtro">Buscar por código o QR</label>
+                <input type="text" id="filtroCalificaciones" placeholder="Escribe el código del alumno o usa QR">
             </div>
 
             <table class="tabla-boleta">
@@ -105,4 +111,56 @@
         {% endif %}
     </section>
 </main>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('filtroCalificaciones');
+    const rows = Array.from(document.querySelectorAll('#cont-calificaciones .grade-value'));
+    const scanButton = document.getElementById('btnEscanearQr');
+
+    if (input && rows.length > 0) {
+        input.addEventListener('input', function () {
+            const query = this.value.trim().toLowerCase();
+
+            rows.forEach(function (row) {
+                const matches = row.textContent.toLowerCase().includes(query);
+                row.style.display = matches ? '' : 'none';
+            });
+        });
+    }
+
+    if (scanButton) {
+        scanButton.addEventListener('click', function () {
+            if (!window.html5QrCode) {
+                alert('La librería de escaneo no está disponible.');
+                return;
+            }
+
+            const reader = new Html5Qrcode('qr-reader');
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            Html5Qrcode.getCameras().then(function (cameras) {
+                if (!cameras.length) {
+                    alert('No se encontraron cámaras disponibles.');
+                    return;
+                }
+
+                const cameraId = cameras[0].id;
+                reader.start(cameraId, config, function (decodedText) {
+                    if (input) {
+                        input.value = decodedText;
+                        input.dispatchEvent(new Event('input'));
+                    }
+                    reader.stop().catch(function () {});
+                }, function () {}).catch(function () {
+                    alert('No se pudo iniciar el escaneo.');
+                });
+            }).catch(function () {
+                alert('No se pudo acceder a la cámara.');
+            });
+        });
+    }
+});
+</script>
 {% endblock %}

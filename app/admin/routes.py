@@ -1,7 +1,7 @@
 import logging
 
 from flask import render_template, redirect, url_for, abort
-# from flask_login import login_required, current_user
+from flask_login import login_required
 # from app.auth.decorators import admin_required
 # from app.auth.models import User
 from . import admin_bp
@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 @admin_bp.route("/admin/")
+@login_required
 def index():
     return render_template("admin/index.html")
 

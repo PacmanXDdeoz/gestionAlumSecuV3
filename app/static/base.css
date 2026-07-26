@@ -98,6 +98,41 @@ table {
     overflow: hidden;
 }
 
+.icon-action {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 4px 6px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #021F34;
+}
+
+.icon-action:hover {
+    transform: scale(1.1);
+}
+
+.form-edicion-alumno .grid-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.form-edicion-alumno label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #021F34;
+}
+
+.input-form {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
 thead {
     background-color: #FFB963;
 }
@@ -158,7 +193,7 @@ svg {
     align-items: center;
     padding: 20px 40px;
     flex-wrap: wrap;
-    /* Permite que los elementos bajen si no hay espacio */
+    gap: 16px;
 }
 
 .logo-escuela img,
@@ -191,6 +226,38 @@ svg {
     background-color: #35688C;
 }
 
+.auth-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-auth {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    background-color: #FFC73A;
+    border-radius: 15px;
+    font-weight: bold;
+    color: #021F34;
+    box-shadow: 2px 4px 10px 0px rgba(0, 0, 0, 0.2);
+}
+
+.btn-auth:hover {
+    background-color: #ffdc79;
+}
+
+.btn-auth-secondary {
+    background-color: #35688C;
+    color: white;
+}
+
+.btn-auth-secondary:hover {
+    background-color: #4f7ba3;
+}
+
 .form-busqueda {
     display: flex;
     align-items: center;
@@ -220,6 +287,25 @@ input[type="text"]#codigoAlumno {
 
 input[type="text"]#codigoAlumno::placeholder {
     color: rgba(255, 255, 255, 0.5);
+}
+
+.filtro-calificaciones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.label-filtro {
+    font-weight: bold;
+    color: #021F34;
+}
+
+input[type="text"]#filtroCalificaciones {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
 }
 
 /* Contenedor principal de la tarjeta */
@@ -366,6 +452,10 @@ footer {
         flex-direction: column;
         /* Apilar label, input y botón en móvil */
         width: 100%;
+    }
+
+    .form-edicion-alumno .grid-form {
+        grid-template-columns: 1fr;
     }
 
     .btn-inicio {

@@ -61,8 +61,35 @@ class Docente(db.Model, UserMixin):
     estatus = db.Column(db.Boolean, default=True)
     creado_en = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
+    def __init__(self, name, email, apellidos="", estatus=True):
+        self.nombre = name
+        self.apellidos = apellidos
+        self.email = email
+        self.estatus = estatus
+
+    def save(self):
+        if not self.id:
+            db.session.add(self)
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    @staticmethod
+    def get_by_id(id):
+        return db.session.get(Docente, id)
+
+    @staticmethod
+    def get_by_email(email):
+        return Docente.query.filter_by(email=email).first()
+
+    @staticmethod
+    def get_all():
+        return Docente.query.all()

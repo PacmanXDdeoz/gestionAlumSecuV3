@@ -8,6 +8,7 @@ SECRET_KEY = '7110c8ae51a4b5af97be6534caef90e4bb9bdcb3380af008f90b23a5d1616bf319
 
 # Database configuration
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_DATABASE_URI = 'sqlite:///gestion_alumnos.db'
 
 # App environments
 APP_ENV_LOCAL = 'local'

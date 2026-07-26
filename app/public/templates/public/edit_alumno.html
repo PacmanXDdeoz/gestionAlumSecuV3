@@ -1,0 +1,113 @@
+{% extends 'base_template.html' %}
+{% block title %}Editar alumno{% endblock %}
+
+{% block content %}
+<header class="header-calificaciones">
+    <div class="logo-escuela">
+        <img src="{{ url_for('static', filename='images/image_1.png') }}" alt="Logo Escuela">
+    </div>
+    <div class="auth-actions">
+        <a href="{{ url_for('public.index') }}" class="btn-auth">Volver al listado</a>
+    </div>
+</header>
+
+<main class="main-calificaciones">
+    <section class="boleta-container">
+        <div class="boleta-card">
+            <h2 style="text-align:center; margin-bottom:20px;">Editar alumno</h2>
+            <form method="post" class="form-edicion-alumno">
+                {{ form.hidden_tag() }}
+                <div class="grid-form">
+                    <div>
+                        <label>Nombre</label>
+                        {{ form.name(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Apellido paterno</label>
+                        {{ form.lastname_p(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Apellido materno</label>
+                        {{ form.lastname_m(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Género</label>
+                        {{ form.genero(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Grupo</label>
+                        {{ form.group_id(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Código</label>
+                        {{ form.password(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Activo</label>
+                        {{ form.status() }}
+                    </div>
+                </div>
+
+                <h3 style="margin:25px 0 10px;">Calificaciones</h3>
+                <div class="grid-form">
+                    <div>
+                        <label>Español</label>
+                        {{ form.español(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Matemáticas</label>
+                        {{ form.matematicas(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Ciencias</label>
+                        {{ form.ciencias(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Geografía</label>
+                        {{ form.geografia(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Historia</label>
+                        {{ form.historia(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Formación Cívica</label>
+                        {{ form.f_civica(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Inglés</label>
+                        {{ form.ingles(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Artes</label>
+                        {{ form.artes(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Fortalecimiento Español</label>
+                        {{ form.f_español(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Fortalecimiento Matemáticas</label>
+                        {{ form.f_matematicas(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Tecnología</label>
+                        {{ form.tecnologia(class_='input-form') }}
+                    </div>
+                </div>
+
+                {% if alumno.codigo_qr %}
+                <div style="margin:25px 0; text-align:center;">
+                    <p><strong>Código QR</strong></p>
+                    <img src="{{ url_for('static', filename=alumno.codigo_qr) }}" alt="QR del alumno" style="max-width:180px;">
+                </div>
+                {% endif %}
+
+                <div style="margin-top:20px; text-align:center;">
+                    {{ form.submit(class_='btn-auth btn-auth-secondary') }}
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+{% endblock %}

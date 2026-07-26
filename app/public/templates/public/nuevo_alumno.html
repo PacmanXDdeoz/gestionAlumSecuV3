@@ -1,0 +1,57 @@
+{% extends 'base_template.html' %}
+{% block title %}Registrar alumno{% endblock %}
+
+{% block content %}
+<header class="header-calificaciones">
+    <div class="logo-escuela">
+        <img src="{{ url_for('static', filename='images/image_1.png') }}" alt="Logo Escuela">
+    </div>
+    <div class="auth-actions">
+        <a href="{{ url_for('public.index') }}" class="btn-auth">Volver al listado</a>
+    </div>
+</header>
+
+<main class="main-calificaciones">
+    <section class="boleta-container">
+        <div class="boleta-card">
+            <h2 style="text-align:center; margin-bottom:20px;">Registrar nuevo alumno</h2>
+            <form method="post" class="form-edicion-alumno">
+                {{ form.hidden_tag() }}
+                <div class="grid-form">
+                    <div>
+                        <label>Nombre</label>
+                        {{ form.name(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Apellido paterno</label>
+                        {{ form.lastname_p(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Apellido materno</label>
+                        {{ form.lastname_m(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Género</label>
+                        {{ form.genero(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Grupo</label>
+                        {{ form.group_id(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Código</label>
+                        {{ form.password(class_='input-form') }}
+                    </div>
+                    <div>
+                        <label>Activo</label>
+                        {{ form.status() }}
+                    </div>
+                </div>
+                <div style="margin-top:20px; text-align:center;">
+                    {{ form.submit(class_='btn-auth btn-auth-secondary') }}
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+{% endblock %}

@@ -28,6 +28,7 @@
                         <th>Nombre</th>
                         <th>Status</th>
                         <th>Grupo</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="contTabla" class="contTabla">
@@ -42,10 +43,16 @@
                         <td>Inscrito</td>
                         {% endif %}
                         <td>{{ alum.grupo }} ° {{ alum.grado }}</td>
+                        <td>
+                            <a href="{{ url_for('public.edit_alumno', alumno_id=alum.id) }}" class="icon-action" title="Editar">✏️</a>
+                            <form method="post" action="{{ url_for('public.baja_alumno', alumno_id=alum.id) }}" style="display:inline;">
+                                <button type="submit" class="icon-action" title="Eliminar" onclick="return confirm('¿Deseas dar de baja lógica a este alumno?');">🗑️</button>
+                            </form>
+                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5">No hay alumnos registrados todavía</td>
+                        <td colspan="6">No hay alumnos registrados todavía</td>
                     </tr>
                     {% endfor %}
                 </tbody>
