@@ -1,0 +1,120 @@
+{% extends "base_template.html" %}
+{% block title %}Buscar Alumno{% endblock %}
+
+{% block content %}
+<div class="relative min-h-screen">
+    <div class="mx-auto flex min-h-screen items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
+        <div class="w-full max-w-4xl overflow-hidden rounded-[2.5rem] border border-white/15 bg-white/95 shadow-[0_30px_80px_rgba(15,23,42,0.22)] backdrop-blur-xl">
+            <div class="bg-gradient-to-r from-sky-600 to-blue-700 p-8 text-white sm:p-10">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.3em] text-sky-100">Búsqueda</p>
+                        <h1 class="mt-3 text-3xl font-semibold sm:text-4xl">Buscar datos de un alumno</h1>
+                    </div>
+                    <a href="{{ url_for('public.home') }}" class="rounded-full bg-white/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/25">← Inicio</a>
+                </div>
+            </div>
+
+            <div class="p-8 sm:p-10">
+                <div class="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6">
+                        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600">Código del alumno</p>
+                        <p class="mt-3 text-lg leading-8 text-slate-600">Introduce el código manual o utiliza el escáner para cargar la información del alumno en segundos.</p>
+                    </div>
+                    <div class="rounded-[1.5rem] border border-slate-200 bg-sky-50 p-6">
+                        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-700">Estado del escaneo</p>
+                        <p class="mt-3 text-2xl font-semibold text-slate-900">{{ request.args.get('codigoAlumno', 'Esperando código') }}</p>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('public.calificaciones') }}" method="GET" id="searchForm" class="mt-8 space-y-6">
+                    <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
+                        <div>
+                            <label for="codigoAlumno" class="mb-2 block text-sm font-medium text-slate-700">Código del alumno</label>
+                            <input id="codigoAlumno" name="codigoAlumno" type="text" maxlength="10" autocomplete="off" required
+                                class="w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-4 text-lg text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                placeholder="Ej: 8E4H2PJ4DA">
+                        </div>
+                        <button type="button" id="btnScanQr"
+                            class="inline-flex min-h-[72px] items-center justify-center rounded-[1.25rem] bg-slate-950 px-6 text-sm font-semibold text-white transition hover:bg-slate-800">
+                            Escanear QR
+                        </button>
+                    </div>
+
+                    <button type="submit" class="w-full rounded-[1.25rem] bg-sky-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:bg-sky-500">Buscar</button>
+                </form>
+
+                <div id="qrScannerContainer" class="mt-8 hidden rounded-[1.75rem] border border-slate-200 bg-slate-950/95 p-6 shadow-xl shadow-slate-950/20">
+                    <div class="mb-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm uppercase tracking-[0.25em] text-sky-400">Escáner QR</p>
+                            <p class="mt-2 text-sm text-slate-300">Coloca el código QR frente a la cámara para completar el campo automáticamente.</p>
+                        </div>
+                        <button type="button" id="btnCloseScanner" class="rounded-full bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-700">Cerrar</button>
+                    </div>
+                    <div id="qrReader" class="h-[320px] rounded-[1.5rem] bg-slate-900"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const inputCodigo = document.getElementById('codigoAlumno');
+        const btnScan = document.getElementById('btnScanQr');
+        const btnClose = document.getElementById('btnCloseScanner');
+        const scannerContainer = document.getElementById('qrScannerContainer');
+        const searchForm = document.getElementById('searchForm');
+
+        let html5QrCode = null;
+
+        btnScan.addEventListener('click', function () {
+            scannerContainer.classList.remove('hidden');
+
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode('qrReader');
+            }
+
+            const config = {
+                fps: 10,
+                qrbox: { width: 280, height: 280 }
+            };
+
+            Html5Qrcode.getCameras().then(function (cameras) {
+                if (!cameras.length) {
+                    alert('No se encontraron cámaras disponibles.');
+                    scannerContainer.classList.add('hidden');
+                    return;
+                }
+
+                const cameraId = cameras[0].id;
+
+                html5QrCode.start(cameraId, config, function (decodedText) {
+                    inputCodigo.value = decodedText;
+                    html5QrCode.stop().catch(function () {});
+                    scannerContainer.classList.add('hidden');
+                    searchForm.submit();
+                }, function () {
+                }).catch(function (err) {
+                    alert('No se pudo iniciar el escaneo: ' + err);
+                    scannerContainer.classList.add('hidden');
+                });
+            }).catch(function () {
+                alert('No se pudo acceder a la cámara. Verifica los permisos.');
+                scannerContainer.classList.add('hidden');
+            });
+        });
+
+        if (btnClose) {
+            btnClose.addEventListener('click', function () {
+                if (html5QrCode) {
+                    html5QrCode.stop().catch(function () {});
+                }
+                scannerContainer.classList.add('hidden');
+            });
+        }
+    });
+</script>
+{% endblock %}

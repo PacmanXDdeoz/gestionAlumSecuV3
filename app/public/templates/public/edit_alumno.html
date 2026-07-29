@@ -14,7 +14,7 @@
 <main class="main-calificaciones">
     <section class="boleta-container">
         <div class="boleta-card">
-            <h2 style="text-align:center; margin-bottom:20px;">Editar alumno</h2>
+            <h2 class="text-center mb-20">Editar alumno</h2>
             <form method="post" class="form-edicion-alumno">
                 {{ form.hidden_tag() }}
                 <div class="grid-form">
@@ -48,7 +48,7 @@
                     </div>
                 </div>
 
-                <h3 style="margin:25px 0 10px;">Calificaciones</h3>
+                <h3 class="section-title">Calificaciones</h3>
                 <div class="grid-form">
                     <div>
                         <label>Español</label>
@@ -97,14 +97,14 @@
                 </div>
 
                 {% if alumno.codigo_qr %}
-                <div style="margin:25px 0; text-align:center;">
+                <div class="qr-display">
                     <p><strong>Código QR</strong></p>
-                    <img src="{{ url_for('static', filename=alumno.codigo_qr) }}" alt="QR del alumno" style="max-width:180px;">
+                    <img src="{{ url_for('static', filename=alumno.codigo_qr) }}" alt="QR del alumno" class="qr-image">
                 </div>
                 {% endif %}
 
-                <div style="margin-top:20px; text-align:center;">
-                    {{ form.submit(class_='btn-auth btn-auth-secondary') }}
+                <div class="form-actions-center">
+                    {{ form.submit(class_='btn') }}
                 </div>
             </form>
         </div>

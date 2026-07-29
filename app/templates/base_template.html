@@ -4,49 +4,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
     <title>{% block title %}{% endblock %}</title>
+    <style>
+        body {
+            min-height: 100vh;
+        }
+
+        .flash-messages {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .flash-message {
+            padding: 1rem 1.25rem;
+            border-radius: 1rem;
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.15);
+        }
+
+        .flash-message.success { background: #16a34a; }
+        .flash-message.error { background: #dc2626; }
+
+        .bg-animated {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            opacity: 0.45;
+        }
+
+        footer {
+            position: relative;
+            z-index: 10;
+            padding: 1rem 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+        }
+    </style>
 </head>
 
-<body>
-
-    <!-- FONDO ANIMADO -->
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-        width="100%" height="100%" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
+<body class="bg-slate-950 text-slate-100 overflow-x-hidden">
+    <!-- Fondos decorativos -->
+    <svg class="bg-animated" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
         <defs>
-            <linearGradient id="bg">
-                <stop offset="0%" style="stop-color:rgba(130, 158, 249, 0.06)"></stop>
-                <stop offset="50%" style="stop-color:rgba(76, 190, 255, 0.6)"></stop>
-                <stop offset="100%" style="stop-color:rgba(115, 209, 72, 0.2)"></stop>
+            <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="rgba(15, 23, 42, 0.8)" />
+                <stop offset="40%" stop-color="rgba(30, 64, 175, 0.95)" />
+                <stop offset="100%" stop-color="rgba(14, 165, 233, 0.65)" />
             </linearGradient>
-            <path id="wave" fill="url(#bg)" d="M-363.852,502.589c0,0,236.988-41.997,505.475,0
-	s371.981,38.998,575.971,0s293.985-39.278,505.474,5.859s493.475,48.368,716.963-4.995v560.106H-363.852V502.589z" />
+            <path id="wave" fill="url(#bg)"
+                d="M-363.852,502.589c0,0,236.988-41.997,505.475,0s371.981,38.998,575.971,0s293.985-39.278,505.474,5.859s493.475,48.368,716.963-4.995v560.106H-363.852V502.589z" />
         </defs>
         <g>
-            <use xlink:href='#wave' opacity=".3">
-                <animateTransform attributeName="transform" attributeType="XML" type="translate" dur="10s"
-                    calcMode="spline" values="270 230; -334 180; 270 230" keyTimes="0; .5; 1"
-                    keySplines="0.42, 0, 0.58, 1.0;0.42, 0, 0.58, 1.0" repeatCount="indefinite" />
+            <use xlink:href="#wave" opacity="0.35">
+                <animateTransform attributeName="transform" type="translate" dur="14s" values="270 230; -334 180; 270 230" repeatCount="indefinite" />
             </use>
-            <use xlink:href='#wave' opacity=".6">
-                <animateTransform attributeName="transform" attributeType="XML" type="translate" dur="8s"
-                    calcMode="spline" values="-270 230;243 220;-270 230" keyTimes="0; .6; 1"
-                    keySplines="0.42, 0, 0.58, 1.0;0.42, 0, 0.58, 1.0" repeatCount="indefinite" />
+            <use xlink:href="#wave" opacity="0.28">
+                <animateTransform attributeName="transform" type="translate" dur="10s" values="-270 230;243 220;-270 230" repeatCount="indefinite" />
             </use>
-            <use xlink:href='#wave' opacty=".9">
-                <animateTransform attributeName="transform" attributeType="XML" type="translate" dur="6s"
-                    calcMode="spline" values="0 230;-140 200;0 230" keyTimes="0; .4; 1"
-                    keySplines="0.42, 0, 0.58, 1.0;0.42, 0, 0.58, 1.0" repeatCount="indefinite" />
+            <use xlink:href="#wave" opacity="0.22">
+                <animateTransform attributeName="transform" type="translate" dur="8s" values="0 230;-140 200;0 230" repeatCount="indefinite" />
             </use>
         </g>
     </svg>
 
-    {% block content %}{% endblock%}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+            <script>
+                setTimeout(function() {
+                    var container = document.querySelector('.flash-messages');
+                    if (container) {
+                        container.style.opacity = '0';
+                        container.style.transition = 'opacity 0.5s';
+                        setTimeout(function() { container.remove(); }, 500);
+                    }
+                }, 4000);
+            </script>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
 
     <footer>
-        <div class="tutora-info">
-            <h2>Tutora</h2>
-            <p>Prof. Alejandra Vazquez Cruz</p>
+        <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <p>Sistema de Gestión Escolar — Prof. Alejandra Vázquez Cruz</p>
         </div>
     </footer>
 </body>

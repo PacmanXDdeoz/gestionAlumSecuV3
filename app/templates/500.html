@@ -1,5 +1,16 @@
 {% extends 'base_template.html' %}
+{% block title %}Error del servidor{% endblock %}
 
 {% block content %}
-    Ooops!! Parece que ha habido un error :(
+<div class="error-container">
+    <div class="error-card">
+        <div class="error-icon">⚠️</div>
+        <div class="error-code">500</div>
+        <div class="error-message">
+            <strong>Error interno del servidor</strong><br>
+            Ha ocurrido un error inesperado. Por favor, intenta de nuevo más tarde.
+        </div>
+        <a href="{{ url_for('public.home') }}" class="btn-back-home">Volver al inicio</a>
+    </div>
+</div>
 {% endblock %}

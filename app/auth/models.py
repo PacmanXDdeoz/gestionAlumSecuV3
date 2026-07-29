@@ -58,14 +58,36 @@ class Docente(db.Model, UserMixin):
     apellidos = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    rol = db.Column(db.String(20), nullable=False, default='docente')
     estatus = db.Column(db.Boolean, default=True)
     creado_en = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    def __init__(self, name, email, apellidos="", estatus=True):
+    # ── Relaciones con materias y horarios ──────────────────────────
+    # Nota: la tabla 'materias_docentes' se importa con lazy loading
+    # para evitar circular imports. Se resuelve en el primer acceso.
+    materias = db.relationship(
+        'Materia',
+        secondary='alejandra.materias_docentes',
+        back_populates='docentes',
+        lazy='dynamic'
+    )
+    horarios = db.relationship(
+        'Horario',
+        backref='docente',
+        lazy=True,
+        foreign_keys='Horario.docente_id'
+    )
+
+    def __init__(self, name, email, apellidos="", rol='docente', estatus=True):
         self.nombre = name
         self.apellidos = apellidos
         self.email = email
+        self.rol = rol
         self.estatus = estatus
+
+    @property
+    def is_admin(self):
+        return self.rol == 'admin'
 
     def save(self):
         if not self.id:

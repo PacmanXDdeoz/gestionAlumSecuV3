@@ -1,0 +1,87 @@
+{% extends "base_template.html" %}
+{% block title %}Gestionar Docentes{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-content">
+        <div class="admin-page-header">
+            <h2>👥 Gestión de Docentes</h2>
+            <div>
+                <a href="{{ url_for('admin.index') }}" class="btn btn-back btn-small">← Panel</a>
+                <a href="{{ url_for('admin.create_docente') }}" class="btn btn-small btn-warning">+ Nuevo Docente</a>
+            </div>
+        </div>
+
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for docente in docentes %}
+                    <tr>
+                        <td>
+                            <strong>{{ docente.nombre }}</strong>
+                            {% if docente.apellidos %}
+                            <br><span class="text-muted">{{ docente.apellidos }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ docente.email }}</td>
+                        <td>
+                            {% if docente.rol == 'admin' %}
+                            <span class="badge badge-admin">Administrador</span>
+                            {% else %}
+                            <span class="badge badge-docente">Docente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if docente.estatus %}
+                            <span class="badge badge-active">Activo</span>
+                            {% else %}
+                            <span class="badge badge-inactive">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('admin.edit_docente', docente_id=docente.id) }}"
+                                   class="btn btn-small btn-warning">Editar</a>
+                                <form method="post"
+                                      action="{{ url_for('admin.toggle_docente', docente_id=docente.id) }}"
+                                      class="form-actions-inline"
+                                      onsubmit="return confirm('¿{{ 'Desactivar' if docente.estatus else 'Activar' }} a {{ docente.nombre }}?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-small {{ 'btn-danger' if docente.estatus else 'btn-back' }}">
+                                        {{ 'Desactivar' if docente.estatus else 'Activar' }}
+                                    </button>
+                                </form>
+                                {% if docente.id != current_user.id %}
+                                <form method="post"
+                                      action="{{ url_for('admin.delete_docente', docente_id=docente.id) }}"
+                                      class="form-actions-inline"
+                                      onsubmit="return confirm('¿Eliminar permanentemente a {{ docente.nombre }}? Esta acción no se puede deshacer.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-small btn-danger">Eliminar</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-row">
+                            No hay docentes registrados todavía.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

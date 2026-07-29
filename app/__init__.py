@@ -1,18 +1,24 @@
 import logging
+import os
 from logging.handlers import SMTPHandler
 
 from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.csrf import CSRFProtect
 
 login_manager = LoginManager()
 db = SQLAlchemy()
 migrate = Migrate()
+csrf = CSRFProtect()
 
 
-def create_app(settings_module):
+def create_app(settings_module=None):
     app = Flask(__name__, instance_relative_config=True)
+
+    settings_module = settings_module or os.getenv('APP_SETTINGS_MODULE', 'config.local')
+
     # Load the config file specified by the APP environment variable
     app.config.from_object(settings_module)
     # Load the configuration from the instance folder
@@ -26,6 +32,8 @@ def create_app(settings_module):
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
 
+    csrf.init_app(app)
+
     db.init_app(app)
     migrate.init_app(app, db)
 
@@ -38,6 +46,27 @@ def create_app(settings_module):
 
     from .public import public_bp
     app.register_blueprint(public_bp)
+
+    # ── Custom Jinja2 filters ──────────────────────────────────────
+    @app.template_filter('grade_color')
+    def grade_color_filter(nota):
+        """Devuelve la clase CSS según la calificación."""
+        if nota is None:
+            return 'none'
+        try:
+            n = float(nota)
+            if n >= 9:
+                return 'excelente'
+            elif n >= 8:
+                return 'bien'
+            elif n >= 7:
+                return 'suficiente'
+            elif n >= 6:
+                return 'insuficiente'
+            else:
+                return 'reprobado'
+        except (ValueError, TypeError):
+            return 'none'
 
     # Custom error handlers
     register_error_handlers(app)

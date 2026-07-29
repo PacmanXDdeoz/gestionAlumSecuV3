@@ -14,21 +14,21 @@
 <main class="main-calificaciones">
     <section class="boleta-container">
         <div class="boleta-card">
-            <h2 style="text-align:center; margin-bottom:20px;">Registrar nuevo alumno</h2>
+            <h2 class="text-center mb-20">Registrar nuevo alumno</h2>
             <form method="post" class="form-edicion-alumno">
                 {{ form.hidden_tag() }}
                 <div class="grid-form">
                     <div>
-                        <label>Nombre</label>
-                        {{ form.name(class_='input-form') }}
+                        <label>Nombre(s)</label>
+                        {{ form.name(class_='input-form', placeholder='Nombre(s) del alumno') }}
                     </div>
                     <div>
                         <label>Apellido paterno</label>
-                        {{ form.lastname_p(class_='input-form') }}
+                        {{ form.lastname_p(class_='input-form', placeholder='Apellido paterno') }}
                     </div>
                     <div>
                         <label>Apellido materno</label>
-                        {{ form.lastname_m(class_='input-form') }}
+                        {{ form.lastname_m(class_='input-form', placeholder='Apellido materno') }}
                     </div>
                     <div>
                         <label>Género</label>
@@ -38,17 +38,12 @@
                         <label>Grupo</label>
                         {{ form.group_id(class_='input-form') }}
                     </div>
-                    <div>
-                        <label>Código</label>
-                        {{ form.password(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Activo</label>
-                        {{ form.status() }}
-                    </div>
                 </div>
-                <div style="margin-top:20px; text-align:center;">
-                    {{ form.submit(class_='btn-auth btn-auth-secondary') }}
+                <div class="alert-info" style="margin-top:15px; text-align:center;">
+                    💡 El código de acceso de 10 dígitos y el código QR se generarán automáticamente al registrar.
+                </div>
+                <div class="form-actions-center">
+                    {{ form.submit(class_='btn') }}
                 </div>
             </form>
         </div>

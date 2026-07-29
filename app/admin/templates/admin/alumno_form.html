@@ -1,0 +1,122 @@
+{% extends "base_template.html" %}
+{% block title %}{% if alumno %}Editar{% else %}Nuevo{% endif %} Alumno{% endblock %}
+
+{% block content %}
+<div class="admin-form-container">
+    <div class="admin-form-card">
+        <h2>{% if alumno %}✏️ Editar Alumno{% else %}➕ Nuevo Alumno{% endif %}</h2>
+
+        <form action="" method="post" novalidate class="admin-form" id="alumnoForm">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.name.label }}
+                {{ form.name(placeholder="Nombre(s) del alumno") }}
+                {% for error in form.name.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.lastname_p.label }}
+                    {{ form.lastname_p(placeholder="Apellido paterno") }}
+                    {% for error in form.lastname_p.errors %}
+                    <span class="form-errors">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.lastname_m.label }}
+                    {{ form.lastname_m(placeholder="Apellido materno") }}
+                    {% for error in form.lastname_m.errors %}
+                    <span class="form-errors">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.genero.label }}
+                    {{ form.genero() }}
+                    {% for error in form.genero.errors %}
+                    <span class="form-errors">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.group_id.label }}
+                    {{ form.group_id() }}
+                    {% for error in form.group_id.errors %}
+                    <span class="form-errors">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Código -->
+            <div class="form-group" id="codigoGroup">
+                {{ form.codigo_manual.label }}
+                <div class="admin-codigo-input-row">
+                    {{ form.codigo_manual(placeholder="Ej: A7B3X9K2M1", class_="admin-codigo-input", disabled=form.auto_generar_codigo.data) }}
+                    <button type="button" id="btnGenerarCodigo" class="btn btn-small btn-back" title="Generar código aleatorio">🎲</button>
+                </div>
+                <span class="text-muted">Déjalo vacío si quieres que se genere automáticamente.</span>
+                {% for error in form.codigo_manual.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <label class="admin-checkbox">
+                {{ form.auto_generar_codigo(id="chkAutoGenerar") }}
+                <span>{{ form.auto_generar_codigo.label.text }}</span>
+            </label>
+
+            {% if not alumno %}
+            <div class="alert-info mt-10">
+                💡 El código QR se generará automáticamente al guardar el alumno.
+            </div>
+            {% endif %}
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin.list_alumnos') }}" class="btn btn-back">Cancelar</a>
+                {{ form.submit(class_='btn btn-warning') }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const chkAuto = document.getElementById('chkAutoGenerar');
+    const codigoInput = document.getElementById('codigo_manual');
+    const btnGenerar = document.getElementById('btnGenerarCodigo');
+
+    function toggleCodigoField() {
+        if (chkAuto.checked) {
+            codigoInput.disabled = true;
+            codigoInput.value = '';
+            codigoInput.placeholder = 'Se generará automáticamente';
+        } else {
+            codigoInput.disabled = false;
+            codigoInput.placeholder = 'Ej: A7B3X9K2M1';
+        }
+    }
+
+    if (chkAuto) {
+        chkAuto.addEventListener('change', toggleCodigoField);
+        toggleCodigoField();
+    }
+
+    if (btnGenerar) {
+        btnGenerar.addEventListener('click', function () {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let codigo = '';
+            for (let i = 0; i < 10; i++) {
+                codigo += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            codigoInput.value = codigo;
+            codigoInput.disabled = false;
+            if (chkAuto) chkAuto.checked = false;
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, flash
 from flask_login import current_user, login_user, logout_user
 from urllib.parse import urlparse
 
@@ -10,11 +10,13 @@ from .models import Docente
 
 @auth_bp.route("/signup/", methods=["GET", "POST"])
 def show_signup_form():
+    """Solo el admin puede crear nuevos docentes."""
     if not current_user.is_authenticated:
         return redirect(url_for('auth.login'))
 
     if not getattr(current_user, 'is_admin', False):
-        return redirect(url_for('public.calificaciones'))
+        flash('No tienes permisos para registrar usuarios.', 'error')
+        return redirect(url_for('public.index'))
 
     form = SignupForm()
     error = None
@@ -22,35 +24,38 @@ def show_signup_form():
         name = form.name.data
         email = form.email.data
         password = form.password.data
+        apellidos = form.apellidos.data
         docente = Docente.get_by_email(email)
         if docente is not None:
             error = f'El email {email} ya está siendo utilizado por otro usuario'
         else:
-            docente = Docente(name=name, email=email)
+            docente = Docente(name=name, email=email, apellidos=apellidos)
             docente.set_password(password)
             docente.save()
-            login_user(docente, remember=True)
-            next_page = request.args.get('next', None)
-            if not next_page or urlparse(next_page).netloc != '':
-                next_page = url_for('public.calificaciones')
-            return redirect(next_page)
+            flash(f'Docente {name} creado exitosamente.', 'success')
+            return redirect(url_for('admin.list_docentes'))
     return render_template("auth/signup_form.html", form=form, error=error)
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('public.calificaciones'))
+        return redirect(url_for('public.docente_panel'))
     form = LoginForm()
+    error = None
     if form.validate_on_submit():
         docente = Docente.get_by_email(form.email.data)
-        if docente is not None and docente.check_password(form.password.data):
+        if docente is None or not docente.check_password(form.password.data):
+            error = 'Email o contraseña incorrectos.'
+        elif not docente.estatus:
+            error = 'Tu cuenta está desactivada. Contacta al administrador.'
+        else:
             login_user(docente, remember=form.remember_me.data)
             next_page = request.args.get('next')
             if not next_page or urlparse(next_page).netloc != '':
-                next_page = url_for('public.calificaciones')
+                next_page = url_for('public.docente_panel')
             return redirect(next_page)
-    return render_template('auth/login_form.html', form=form)
+    return render_template('auth/login_form.html', form=form, error=error)
 
 
 @auth_bp.route('/logout')

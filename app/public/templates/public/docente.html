@@ -1,0 +1,186 @@
+{% extends "base_template.html" %}
+{% block title %}Panel Docente{% endblock %}
+
+{% block content %}
+<div class="docente-wrapper">
+    <!-- Top Bar -->
+    <header class="docente-topbar">
+        <a href="{{ url_for('public.home') }}" class="docente-home-link">← Inicio</a>
+        <div class="docente-user">
+            <span class="docente-user-icon">👨‍🏫</span>
+            <div class="docente-user-info">
+                <span class="docente-user-name">{{ docente.nombre }} {{ docente.apellidos }}</span>
+                <span class="docente-user-role">{{ 'Administrador' if docente.is_admin else 'Docente' }}</span>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="docente-logout-btn" title="Cerrar sesión">🚪</a>
+            {% if docente.is_admin %}
+            <a href="{{ url_for('admin.index') }}" class="docente-admin-btn btn-small">Panel Admin</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="docente-main">
+        <!-- Materias Section -->
+        <section class="docente-section">
+            <h2 class="docente-section-title">📚 Materias Asignadas</h2>
+            {% if materias %}
+            <div class="docente-materias-grid">
+                {% for materia in materias %}
+                <button type="button" class="docente-materia-card" data-materia-id="{{ materia.id }}" data-materia-nombre="{{ materia.nombre }}">
+                    <div class="docente-materia-icon">
+                        {% set icons = {
+                            'Español': '📖', 'Matemáticas': '🔢', 'Ciencias': '🔬', 'Geografía': '🌍',
+                            'Historia': '🏛️', 'Formación Cívica y Ética': '🤝', 'Inglés': '🇬🇧',
+                            'Artes': '🎨', 'Fortalecimiento de Español': '📝', 'Fortalecimiento de Matemáticas': '🧮',
+                            'Tecnología': '💻'
+                        } %}
+                        {{ icons.get(materia.nombre, '📘') }}
+                    </div>
+                    <h3 class="docente-materia-nombre">{{ materia.nombre }}</h3>
+                    {% if materia.descripcion %}
+                    <p class="docente-materia-desc">{{ materia.descripcion }}</p>
+                    {% endif %}
+                </button>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="docente-empty">
+                <p>No tienes materias asignadas actualmente.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Horario Section -->
+        <section class="docente-section">
+            <h2 class="docente-section-title">📅 Horario del Profesor</h2>
+            {% if horarios %}
+            <div class="docente-horario-panel">
+                {% set dias_map = {1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 7: 'Domingo'} %}
+                {% set dias_orden = [1, 2, 3, 4, 5] %}
+
+                {% for dia_num in dias_orden %}
+                {% set dia_nombre = dias_map[dia_num] %}
+                {% set horarios_dia = horarios | selectattr('dia_semana', 'equalto', dia_num) | list %}
+                <div class="docente-horario-dia {% if not horarios_dia %}docente-horario-vacio{% endif %}">
+                    <h4 class="docente-horario-dia-nombre">{{ dia_nombre }}</h4>
+                    <div class="docente-horario-clases">
+                        {% if horarios_dia %}
+                        {% for h in horarios_dia %}
+                        <div class="docente-horario-clase">
+                            <span class="docente-horario-hora">{{ h.hora_inicio.strftime('%H:%M') }} - {{ h.hora_fin.strftime('%H:%M') }}</span>
+                            <span class="docente-horario-mat">{{ h.materia.nombre if h.materia else '—' }}</span>
+                            {% if h.salon %}
+                            <span class="docente-horario-salon">📍 {{ h.salon }}</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <span class="docente-horario-sin-clases">Sin clases</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="docente-empty">
+                <p>No tienes horario asignado actualmente.</p>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+</div>
+
+<!-- ====== MODAL ====== -->
+<div id="materiaModal" class="modal-overlay" style="display:none;">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span id="modalMateriaIcon" class="modal-icon">📘</span>
+            <h3 id="modalMateriaTitle" class="modal-title">Materia</h3>
+        </div>
+        <div class="modal-body">
+            <p class="modal-desc">Selecciona una opción para esta materia:</p>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn modal-btn-alumnos" id="modalBtnAlumnos">
+                    📋 Lista de alumnos
+                </button>
+                <button type="button" class="modal-btn modal-btn-calificaciones" id="modalBtnCalificaciones">
+                    📊 Lista de calificaciones
+                </button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="modal-btn-close" id="modalBtnClose">Volver</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('materiaModal');
+    const modalTitle = document.getElementById('modalMateriaTitle');
+    const modalIcon = document.getElementById('modalMateriaIcon');
+    const modalClose = document.getElementById('modalBtnClose');
+    const modalBtnAlumnos = document.getElementById('modalBtnAlumnos');
+    const modalBtnCalificaciones = document.getElementById('modalBtnCalificaciones');
+
+    const materiaIcons = {
+        'Español': '📖', 'Matemáticas': '🔢', 'Ciencias': '🔬', 'Geografía': '🌍',
+        'Historia': '🏛️', 'Formación Cívica y Ética': '🤝', 'Inglés': '🇬🇧',
+        'Artes': '🎨', 'Fortalecimiento de Español': '📝', 'Fortalecimiento de Matemáticas': '🧮',
+        'Tecnología': '💻'
+    };
+
+    let currentMateriaId = null;
+
+    // Open modal when clicking a materia card
+    document.querySelectorAll('.docente-materia-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+            const id = this.dataset.materiaId;
+            const nombre = this.dataset.materiaNombre;
+            currentMateriaId = id;
+            modalTitle.textContent = nombre;
+            modalIcon.textContent = materiaIcons[nombre] || '📘';
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    // Close modal
+    function closeModal() {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        currentMateriaId = null;
+    }
+
+    modalClose.addEventListener('click', closeModal);
+
+    // Close on overlay click
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+
+    // Modal action buttons
+    modalBtnAlumnos.addEventListener('click', function () {
+        if (currentMateriaId) {
+            alert('📋 Vista de alumnos por materia — próximamente.');
+        }
+    });
+
+    modalBtnCalificaciones.addEventListener('click', function () {
+        if (currentMateriaId) {
+            alert('📊 Vista de calificaciones por materia — próximamente.');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "base_template.html" %}
+{% block title %}Gestión de Alumnos{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-content">
+        <div class="admin-page-header">
+            <h2>📋 Gestión de Alumnos</h2>
+            <div>
+                <a href="{{ url_for('admin.index') }}" class="btn btn-back btn-small">← Panel</a>
+                <a href="{{ url_for('admin.create_alumno') }}" class="btn btn-warning btn-small">+ Nuevo Alumno</a>
+            </div>
+        </div>
+
+        <!-- Filtro en tiempo real -->
+        <div class="admin-filter-bar">
+            <input type="text" id="filtroAlumnos" class="admin-filter-input" placeholder="🔍 Buscar por nombre, código o grupo..." autocomplete="off">
+        </div>
+
+        <div class="admin-table-wrapper">
+            <table class="admin-table" id="tablaAlumnos">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Nombre</th>
+                        <th>Género</th>
+                        <th>Grupo</th>
+                        <th>Código</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alumno in alumnos %}
+                    <tr class="alumno-row" data-search="{{ alumno.name }} {{ alumno.lastname_p }} {{ alumno.lastname_m }} {{ alumno.password }} {{ alumno.grupo_info.grado }}°{{ alumno.grupo_info.grupo }}">
+                        <td>{{ alumno.id }}</td>
+                        <td><strong>{{ alumno.name }} {{ alumno.lastname_p }} {{ alumno.lastname_m }}</strong></td>
+                        <td>{{ alumno.genero }}</td>
+                        <td>{{ alumno.grupo_info.grado }}° {{ alumno.grupo_info.grupo }}</td>
+                        <td><code class="admin-codigo">{{ alumno.password }}</code></td>
+                        <td>
+                            {% if alumno.status %}
+                            <span class="badge badge-active">Inscrito</span>
+                            {% else %}
+                            <span class="badge badge-inactive">Baja</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('admin.edit_alumno', alumno_id=alumno.id) }}"
+                                   class="btn btn-small btn-warning" title="Editar">✏️ Editar</a>
+                                <form method="post"
+                                      action="{{ url_for('admin.baja_alumno', alumno_id=alumno.id) }}"
+                                      class="form-actions-inline"
+                                      onsubmit="return confirm('¿{{ 'Dar de baja' if alumno.status else 'Reactivar' }} a {{ alumno.name }}?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-small {{ 'btn-danger' if alumno.status else 'btn-back' }}">
+                                        {{ '🗑️ Baja' if alumno.status else '✅ Alta' }}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="empty-row">No hay alumnos registrados todavía.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p class="admin-total-count" id="totalCount">Total: {{ alumnos | length }} alumno(s)</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filtro = document.getElementById('filtroAlumnos');
+    const rows = document.querySelectorAll('.alumno-row');
+    const totalSpan = document.getElementById('totalCount');
+
+    if (filtro) {
+        filtro.addEventListener('input', function () {
+            const query = this.value.trim().toLowerCase();
+            let visible = 0;
+
+            rows.forEach(function (row) {
+                const searchData = row.dataset.search ? row.dataset.search.toLowerCase() : '';
+                const matches = query === '' || searchData.includes(query);
+                row.style.display = matches ? '' : 'none';
+                if (matches) visible++;
+            });
+
+            if (totalSpan) {
+                totalSpan.textContent = 'Mostrando: ' + visible + ' de ' + rows.length + ' alumno(s)';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

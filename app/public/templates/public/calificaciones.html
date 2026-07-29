@@ -2,165 +2,126 @@
 {% block title %}Calificaciones{% endblock %}
 
 {% block content %}
-<header class="header-calificaciones">
-    <div class="logo-escuela">
-        <img src="{{ url_for('static', filename='images/image_1.png') }}" alt="Logo Escuela">
-    </div>
-
-    <div class="nav-buscador">
-        <a href="{{ url_for('public.index') }}" class="btn-inicio">Inicio</a>
-        <form action="{{ url_for('public.calificaciones') }}" class="form-busqueda" method="GET">
-            <label for="codigoAlumno" class="label-codigo">Código:</label>
-            <input type="text" id="codigoAlumno" name="codigoAlumno" placeholder="123456789"
-                value="{{ request.args.get('codigoAlumno', '') }}">
-            <button type="submit" id="btnBuscarCodigo">Buscar</button>
-        </form>
-    </div>
-
-    <div class="auth-actions">
-        <a href="{{ url_for('auth.login') }}" class="btn-auth">Login</a>
-        <button type="button" id="btnEscanearQr" class="btn-auth">Escanear QR</button>
-    </div>
-</header>
-
-<main class="main-calificaciones">
-    <section class="boleta-container">
-        {% if alumno %}
-        <div class="boleta-card">
-            <p id="title-card" style="display: flex; justify-content: center;"></p>
-
-            <div class="boleta-header">
-                <p>Grupo: <strong><span id="student-grade">{{ alumno.grupo_info.grado }}</span>°<span
-                            id="student-group">{{ alumno.grupo_info.grupo }}</span></p></strong>
-                <p>Nombre: <strong><span id="student-name">{{ alumno.name }} {{ alumno.lastname_p }} {{ lastname_m
-                            }}</span></p></strong>
+<div class="relative min-h-screen">
+    <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div class="mb-8 flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-slate-950/70 px-6 py-6 shadow-2xl shadow-slate-950/20 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-8">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">Resultado del alumno</p>
+                <h1 class="mt-3 text-3xl font-semibold text-white sm:text-4xl">Calificaciones</h1>
             </div>
-
-            <div class="filtro-calificaciones">
-                <label for="filtroCalificaciones" class="label-filtro">Buscar por código o QR</label>
-                <input type="text" id="filtroCalificaciones" placeholder="Escribe el código del alumno o usa QR">
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ url_for('public.home') }}" class="rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20">Inicio</a>
+                <a href="{{ url_for('public.buscar_alumno') }}" class="rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-400">Buscar otro</a>
             </div>
-
-            <table class="tabla-boleta">
-                <thead>
-                    <tr>
-                        <th>Materia</th>
-                        <th>Calificación</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody id="cont-calificaciones">
-                    {% if alumno.calificaciones %}
-                    <tr class="grade-value">
-                        <td>Español:</td>
-                        <td id="español">{{ alumno.calificaciones[0].español }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Matematicas:</td>
-                        <td id="matematicas">{{ alumno.calificaciones[0].matematicas }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Ciencias:</td>
-                        <td id="ciencias">{{ alumno.calificaciones[0].ciencias }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Geografía:</td>
-                        <td id="geografia">{{ alumno.calificaciones[0].geografia }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Historia:</td>
-                        <td id="historia">{{ alumno.calificaciones[0].historia }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Formación Civica y ética:</td>
-                        <td id="fcye">{{ alumno.calificaciones[0].f_civica }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Ingles:</td>
-                        <td id="ingles">{{ alumno.calificaciones[0].ingles }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Artes:</td>
-                        <td id="artes">{{ alumno.calificaciones[0].artes }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Fortalecimiento de Español:</td>
-                        <td id="fesp">{{ alumno.calificaciones[0].f_español }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Fortalecimiento de Matematicas:</td>
-                        <td id="fmate">{{ alumno.calificaciones[0].f_matematicas }}</td>
-                    </tr>
-                    <tr class="grade-value">
-                        <td> Tecnologia:</td>
-                        <td id="tecnologia">{{ alumno.calificaciones[0].tecnologia }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="3" style="text-align: center;">Este alumno aún no tiene calificaciones registradas
-                        </td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
         </div>
+
+        {% if alumno %}
+        <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div class="space-y-6">
+                <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+                    <h2 class="text-xl font-semibold text-slate-900">Datos personales</h2>
+                    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+                        <div class="rounded-[1.25rem] bg-slate-50 p-5">
+                            <p class="text-sm uppercase tracking-[0.2em] text-slate-500">Nombre</p>
+                            <p class="mt-3 text-lg font-semibold text-slate-900">{{ alumno.name }} {{ alumno.lastname_p }} {{ alumno.lastname_m }}</p>
+                        </div>
+                        <div class="rounded-[1.25rem] bg-slate-50 p-5">
+                            <p class="text-sm uppercase tracking-[0.2em] text-slate-500">Grupo</p>
+                            <p class="mt-3 text-lg font-semibold text-slate-900">{{ alumno.grupo_info.grado }}° {{ alumno.grupo_info.grupo }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+                    <h2 class="text-xl font-semibold text-slate-900">Profesor y tutor</h2>
+                    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+                        <div class="rounded-[1.25rem] bg-sky-50 p-5">
+                            <p class="text-sm uppercase tracking-[0.2em] text-sky-600">Tutor</p>
+                            <p class="mt-3 text-lg font-semibold text-slate-900">Prof. Alejandra Vázquez Cruz</p>
+                        </div>
+                        <div class="rounded-[1.25rem] bg-slate-50 p-5">
+                            <p class="text-sm uppercase tracking-[0.2em] text-slate-500">Código</p>
+                            <p class="mt-3 text-lg font-semibold text-slate-900">{{ alumno.password }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+                <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Código QR</p>
+                <div class="mt-6 flex min-h-[260px] items-center justify-center rounded-[1.75rem] bg-slate-50 p-6">
+                    {% if alumno.codigo_qr %}
+                    <img src="{{ url_for('static', filename=alumno.codigo_qr) }}" alt="QR del alumno" class="h-56 w-56 object-contain" />
+                    {% else %}
+                    <div class="text-center text-slate-500">QR no disponible</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 rounded-[2rem] border border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-xl font-semibold text-slate-900">Materias y calificaciones</h2>
+                    <p class="mt-2 text-sm text-slate-500">Se visualizan las materias con colores según el desempeño.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <span class="rounded-full bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-700">9 - 10</span>
+                    <span class="rounded-full bg-amber-500/15 px-4 py-2 text-sm font-semibold text-amber-700">8</span>
+                    <span class="rounded-full bg-slate-600/15 px-4 py-2 text-sm font-semibold text-slate-700">7 o menos</span>
+                </div>
+            </div>
+
+            {% if materias %}
+            <div class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {% for materia in materias %}
+                    {% set valor = materia.nota if materia.nota is not none else 0 %}
+                    {% if valor >= 9 %}
+                        {% set bg = 'bg-emerald-500' %}
+                        {% set text = 'text-white' %}
+                    {% elif valor == 8 %}
+                        {% set bg = 'bg-amber-500' %}
+                        {% set text = 'text-slate-950' %}
+                    {% elif valor >= 7 %}
+                        {% set bg = 'bg-slate-600' %}
+                        {% set text = 'text-white' %}
+                    {% else %}
+                        {% set bg = 'bg-red-500' %}
+                        {% set text = 'text-white' %}
+                    {% endif %}
+
+                <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ materia.nombre }}</p>
+                            <p class="mt-3 text-2xl font-semibold text-slate-900">{{ materia.nota if materia.nota is not none else '-' }}</p>
+                        </div>
+                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl {{ bg }} {{ text }}">
+                            {{ materia.nota if materia.nota is not none else '—' }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="mt-8 rounded-[1.5rem] bg-slate-50 p-8 text-center text-slate-500">Este alumno aún no tiene calificaciones registradas.</div>
+            {% endif %}
+        </div>
+
         {% elif request.args.get('codigoAlumno') %}
-        <div style="text-align: center; color: red; margin-top: 20px;">
-            <p>No se encontró ningún alumno con el código: <b>{{ request.args.get('codigoAlumno') }}</b></p>
+        <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-10 text-center shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+            <div class="mx-auto mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-rose-500/10 text-4xl text-rose-400">😕</div>
+            <h2 class="text-3xl font-semibold text-slate-900">Alumno no encontrado</h2>
+            <p class="mt-4 text-base leading-7 text-slate-600">No se encontró ningún alumno con el código: <strong>{{ request.args.get('codigoAlumno') }}</strong></p>
+            <a href="{{ url_for('public.buscar_alumno') }}" class="mt-8 inline-flex rounded-full bg-slate-950 px-8 py-4 text-sm font-semibold text-white transition hover:bg-slate-800">Intentar de nuevo</a>
+        </div>
+        {% else %}
+        <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-10 text-center shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+            <h2 class="text-3xl font-semibold text-slate-900">Ingresa un código para ver las calificaciones</h2>
+            <p class="mt-4 text-base leading-7 text-slate-600">Utiliza el buscador para consultar el estado académico de un alumno.</p>
+            <a href="{{ url_for('public.buscar_alumno') }}" class="mt-8 inline-flex rounded-full bg-sky-600 px-8 py-4 text-sm font-semibold text-white transition hover:bg-sky-500">Buscar alumno</a>
         </div>
         {% endif %}
-    </section>
-</main>
-
-<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const input = document.getElementById('filtroCalificaciones');
-    const rows = Array.from(document.querySelectorAll('#cont-calificaciones .grade-value'));
-    const scanButton = document.getElementById('btnEscanearQr');
-
-    if (input && rows.length > 0) {
-        input.addEventListener('input', function () {
-            const query = this.value.trim().toLowerCase();
-
-            rows.forEach(function (row) {
-                const matches = row.textContent.toLowerCase().includes(query);
-                row.style.display = matches ? '' : 'none';
-            });
-        });
-    }
-
-    if (scanButton) {
-        scanButton.addEventListener('click', function () {
-            if (!window.html5QrCode) {
-                alert('La librería de escaneo no está disponible.');
-                return;
-            }
-
-            const reader = new Html5Qrcode('qr-reader');
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-            Html5Qrcode.getCameras().then(function (cameras) {
-                if (!cameras.length) {
-                    alert('No se encontraron cámaras disponibles.');
-                    return;
-                }
-
-                const cameraId = cameras[0].id;
-                reader.start(cameraId, config, function (decodedText) {
-                    if (input) {
-                        input.value = decodedText;
-                        input.dispatchEvent(new Event('input'));
-                    }
-                    reader.stop().catch(function () {});
-                }, function () {}).catch(function () {
-                    alert('No se pudo iniciar el escaneo.');
-                });
-            }).catch(function () {
-                alert('No se pudo acceder a la cámara.');
-            });
-        });
-    }
-});
-</script>
+    </div>
+</div>
 {% endblock %}

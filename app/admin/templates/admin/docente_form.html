@@ -1,0 +1,73 @@
+{% extends "base_template.html" %}
+{% block title %}{% if docente %}Editar{% else %}Nuevo{% endif %} Docente{% endblock %}
+
+{% block content %}
+<div class="admin-form-container">
+    <div class="admin-form-card">
+        <h2>{% if docente %}✏️ Editar Docente{% else %}➕ Nuevo Docente{% endif %}</h2>
+
+        <form action="" method="post" novalidate class="admin-form">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.name.label }}
+                {{ form.name(placeholder="Nombre(s) del docente") }}
+                {% for error in form.name.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.apellidos.label }}
+                {{ form.apellidos(placeholder="Apellidos") }}
+                {% for error in form.apellidos.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.email.label }}
+                {{ form.email(placeholder="correo@escuela.com") }}
+                {% for error in form.email.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(placeholder="{% if docente %}Dejar vacío para no cambiar{% else %}Contraseña{% endif %}") }}
+                {% if docente %}
+                <span class="text-muted">Deja este campo vacío si no deseas cambiar la contraseña.</span>
+                {% endif %}
+                {% for error in form.password.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.rol.label }}
+                {{ form.rol() }}
+                {% for error in form.rol.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.materias.label }}
+                <div class="admin-materias-select">
+                    {{ form.materias(size=8, class_='admin-multi-select') }}
+                </div>
+                <span class="text-muted">Mantén presionado Ctrl (Cmd en Mac) para seleccionar varias.</span>
+                {% for error in form.materias.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin.list_docentes') }}" class="btn btn-back">Cancelar</a>
+                {{ form.submit(class_='btn btn-warning') }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

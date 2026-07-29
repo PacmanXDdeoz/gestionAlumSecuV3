@@ -1,36 +1,56 @@
 {% extends "base_template.html" %}
 
-{% block title %}Registro de usuarios{% endblock %}
+{% block title %}Registrar Docente{% endblock %}
 
 {% block content %}
-    {% if error %}
-        <p style="color: red;"><strong>Error:</strong> {{ error }}
-    {% endif %}
-    <form action="" method="post" novalidate>
-        {{ form.hidden_tag() }}
-        <div>
-            {{ form.name.label }}
-            {{ form.name(size=64) }}<br>
-            {% for error in form.name.errors %}
-            <span style="color: red;">{{ error }}</span>
-            {% endfor %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Registrar Docente</h2>
+        <p class="auth-subtitle">Crea una nueva cuenta de docente</p>
+
+        {% if error %}
+        <div class="alert-error">
+            {{ error }}
         </div>
-        <div>
-            {{ form.email.label }}
-            {{ form.email }}<br>
-            {% for error in form.email.errors %}
-            <span style="color: red;">{{ error }}</span>
-            {% endfor %}
-        </div>
-        <div>
-            {{ form.password.label }}
-            {{ form.password }}<br>
-            {% for error in form.password.errors %}
-            <span style="color: red;">{{ error }}</span>
-            {% endfor %}
-        </div>
-        <div>
-            {{ form.submit() }}
-        </div>
-    </form>
+        {% endif %}
+
+        <form action="" method="post" novalidate class="auth-form">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.name.label }}
+                {{ form.name(placeholder="Juan") }}
+                {% for error in form.name.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.apellidos.label }}
+                {{ form.apellidos(placeholder="Pérez López") }}
+                {% for error in form.apellidos.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.email.label }}
+                {{ form.email(placeholder="docente@escuela.com") }}
+                {% for error in form.email.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(placeholder="••••••••") }}
+                {% for error in form.password.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            {{ form.submit(class_='btn-submit') }}
+        </form>
+    </div>
+</div>
 {% endblock %}

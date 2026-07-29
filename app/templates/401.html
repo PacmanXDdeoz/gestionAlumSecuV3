@@ -1,5 +1,17 @@
 {% extends 'base_template.html' %}
+{% block title %}Acceso denegado{% endblock %}
 
 {% block content %}
-    Ooops!! No tienes permisos de acceso
+<div class="error-container">
+    <div class="error-card">
+        <div class="error-icon">🔒</div>
+        <div class="error-code">401</div>
+        <div class="error-message">
+            <strong>Acceso denegado</strong><br>
+            No tienes permisos para acceder a esta página.<br>
+            Inicia sesión con una cuenta con los permisos adecuados.
+        </div>
+        <a href="{{ url_for('public.home') }}" class="btn-back-home">Ir al inicio</a>
+    </div>
+</div>
 {% endblock %}

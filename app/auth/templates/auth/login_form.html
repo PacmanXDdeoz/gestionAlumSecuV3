@@ -1,30 +1,60 @@
 {% extends "base_template.html" %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Iniciar sesión{% endblock %}
 
 {% block content %}
-    <div>
-        <form action="" method="post" novalidate>
+<div class="login-wrapper">
+    <a href="{{ url_for('public.home') }}" class="login-back-link">← Volver al inicio</a>
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon">👨‍🏫</div>
+            <h2>Iniciar sesión</h2>
+            <p class="login-subtitle">Accede al panel de gestión docente</p>
+        </div>
+
+        {% if error %}
+        <div class="alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="" method="post" novalidate class="login-form">
             {{ form.hidden_tag() }}
-            <div>
+
+            <div class="login-field">
                 {{ form.email.label }}
-                {{ form.email }}<br>
+                <div class="login-input-wrapper">
+                    <span class="login-input-icon">📧</span>
+                    {{ form.email(placeholder="tu@correo.com", class_="login-input") }}
+                </div>
                 {% for error in form.email.errors %}
-                <span style="color: red;">{{ error }}</span>
+                <span class="login-error">{{ error }}</span>
                 {% endfor %}
             </div>
-            <div>
+
+            <div class="login-field">
                 {{ form.password.label }}
-                {{ form.password }}<br>
+                <div class="login-input-wrapper">
+                    <span class="login-input-icon">🔒</span>
+                    {{ form.password(placeholder="••••••••", class_="login-input") }}
+                </div>
                 {% for error in form.password.errors %}
-                <span style="color: red;">{{ error }}</span>
+                <span class="login-error">{{ error }}</span>
                 {% endfor %}
             </div>
-            <div>{{ form.remember_me() }} {{ form.remember_me.label }}</div>
-            <div>
-                {{ form.submit() }}
-            </div>
+
+            <label class="login-checkbox">
+                {{ form.remember_me() }}
+                <span>{{ form.remember_me.label.text }}</span>
+            </label>
+
+            {{ form.submit(class_='login-btn-submit') }}
         </form>
+
+        <div class="login-footer-text">
+            <p>¿Problemas para acceder? Contacta al administrador</p>
+        </div>
     </div>
-    <div>¿No tienes cuenta? <a href="{{ url_for('auth.show_signup_form') }}">Regístrate</a></div>
+</div>
 {% endblock %}

@@ -1,12 +1,59 @@
 {% extends "base_template.html" %}
-
-{% block title %}
-    Miniblog | Admin
-{% endblock %}
+{% block title %}Panel de Administración{% endblock %}
 
 {% block content %}
-    <ul>
-        <li><a href="{{ url_for('admin.list_posts') }}">Posts</a></li>
-        <li><a href="{{ url_for('admin.list_users') }}">Usuarios</a></li>
-    </ul>
+<div class="admin-container">
+    <div class="admin-content">
+        <div class="admin-page-header">
+            <h2>📊 Panel de Administración</h2>
+            <div>
+                <a href="{{ url_for('public.docente_panel') }}" class="btn btn-back btn-small">← Panel Docente</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-small btn-danger">Cerrar sesión</a>
+            </div>
+        </div>
+
+        <div class="admin-stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_alumnos }}</div>
+                <div class="stat-label">Total de alumnos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_grupos }}</div>
+                <div class="stat-label">Total de grupos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_docentes }}</div>
+                <div class="stat-label">Total de docentes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ docentes_activos }}</div>
+                <div class="stat-label">Docentes activos</div>
+            </div>
+        </div>
+
+        <h3 class="section-title-light">Accesos rápidos</h3>
+        <div class="admin-quick-links">
+            <div class="quick-link-card">
+                <div class="link-icon">📋</div>
+                <a href="{{ url_for('admin.list_alumnos') }}">Gestionar Alumnos</a>
+            </div>
+            <div class="quick-link-card">
+                <div class="link-icon">➕</div>
+                <a href="{{ url_for('admin.create_alumno') }}">Nuevo Alumno</a>
+            </div>
+            <div class="quick-link-card">
+                <div class="link-icon">👥</div>
+                <a href="{{ url_for('admin.list_docentes') }}">Gestionar Docentes</a>
+            </div>
+            <div class="quick-link-card">
+                <div class="link-icon">➕</div>
+                <a href="{{ url_for('admin.create_docente') }}">Nuevo Docente</a>
+            </div>
+            <div class="quick-link-card">
+                <div class="link-icon">📚</div>
+                <a href="{{ url_for('admin.list_grupos') }}">Gestionar Grupos</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from sqlalchemy.engine import make_url
 from os.path import abspath, dirname
 
 
@@ -8,7 +11,18 @@ SECRET_KEY = '7110c8ae51a4b5af97be6534caef90e4bb9bdcb3380af008f90b23a5d1616bf319
 
 # Database configuration
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-SQLALCHEMY_DATABASE_URI = 'sqlite:///gestion_alumnos.db'
+
+# Database URI leída desde archivo secreto (PostgreSQL)
+_SECRET_DB_URI_FILE = Path(BASE_DIR) / 'db_uri.secret'
+try:
+    SQLALCHEMY_DATABASE_URI = make_url(
+        _SECRET_DB_URI_FILE.read_text(encoding='utf-8').strip()
+    )
+except FileNotFoundError:
+    raise RuntimeError(
+        'No se encontró el archivo db_uri.secret con la URI de PostgreSQL. '
+        'Copia la URI de conexión en ese archivo para continuar.'
+    )
 
 # App environments
 APP_ENV_LOCAL = 'local'
