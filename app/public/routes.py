@@ -5,12 +5,22 @@ import string as string_module
 from flask import abort, render_template, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
 
+from app import db
 from app.auth.models import Docente
-from app.models import Alumno, Calificacion, Horario, Materia
+from app.models import Alumno, Calificacion, Horario, Materia, AnotacionAlumno
 from . import public_bp
 from .forms import AlumnoEditForm, RegAlumnos
 
 logger = logging.getLogger(__name__)
+
+
+def ensure_required_tables():
+    """Creates missing app tables defensively to avoid silent save failures."""
+    try:
+        db.create_all()
+    except Exception as exc:  # pragma: no cover - defensive runtime fallback
+        logger.warning('No se pudieron crear tablas automáticamente: %s', exc)
+        raise
 
 
 def _generar_codigo(longitud=10):
@@ -23,13 +33,6 @@ def _generar_codigo(longitud=10):
 def home():
     """Página de bienvenida pública con dos opciones: alumno/tutor o profesor."""
     return render_template("public/home.html")
-
-
-@public_bp.route("/alumnos/")
-@login_required
-def index():
-    alumnos = Alumno.query.order_by(Alumno.id.asc()).all()
-    return render_template("public/index.html", alumno=alumnos)
 
 
 @public_bp.route('/alumno/nuevo', methods=['GET', 'POST'])
@@ -54,7 +57,7 @@ def nuevo_alumno():
         alumno.save()
         alumno.generate_qr_code(str(alumno.id))
 
-        return redirect(url_for('public.index'))
+        return redirect(url_for('public.docente_panel'))
 
     return render_template('public/nuevo_alumno.html', form=form)
 
@@ -62,37 +65,6 @@ def nuevo_alumno():
 def buscar_alumno():
     """Página pública de búsqueda con input de código y escáner QR."""
     return render_template("public/alumn_search.html")
-
-
-@public_bp.route("/calificaciones")
-def calificaciones():
-    codigo = request.args.get('codigoAlumno')
-    alumno_encontrado = None
-    materias_list = []
-
-    if codigo:
-        alumno_encontrado = Alumno.query.filter_by(password=codigo).first()
-        if alumno_encontrado and alumno_encontrado.calificaciones:
-            calif = alumno_encontrado.calificaciones[0]
-            materias_list = [
-                {'nombre': 'Español', 'nota': calif.español},
-                {'nombre': 'Matemáticas', 'nota': calif.matematicas},
-                {'nombre': 'Ciencias', 'nota': calif.ciencias},
-                {'nombre': 'Geografía', 'nota': calif.geografia},
-                {'nombre': 'Historia', 'nota': calif.historia},
-                {'nombre': 'Formación Cívica y Ética', 'nota': calif.f_civica},
-                {'nombre': 'Inglés', 'nota': calif.ingles},
-                {'nombre': 'Artes', 'nota': calif.artes},
-                {'nombre': 'Fortalecimiento de Español', 'nota': calif.f_español},
-                {'nombre': 'Fortalecimiento de Matemáticas', 'nota': calif.f_matematicas},
-                {'nombre': 'Tecnología', 'nota': calif.tecnologia},
-            ]
-    
-    return render_template(
-        "public/calificaciones.html",
-        alumno=alumno_encontrado,
-        materias=materias_list
-    )
 
 
 @public_bp.route('/api/alumno/register', methods=['POST'])
@@ -124,7 +96,6 @@ def api_alumno_register():
 
 
 @public_bp.route('/api/alumno/<string:codigo>/calificaciones', methods=['GET'])
-@login_required
 def api_alumno_calificaciones(codigo):
     alumno = Alumno.find_by_code(codigo)
     if alumno is None:
@@ -235,7 +206,7 @@ def edit_alumno(alumno_id):
 
         alumno.save()
         calificacion.save()
-        return redirect(url_for('public.index'))
+        return redirect(url_for('public.docente_panel'))
 
     return render_template('public/edit_alumno.html', alumno=alumno, form=form)
 
@@ -246,7 +217,7 @@ def baja_alumno(alumno_id):
     alumno = Alumno.query.get_or_404(alumno_id)
     alumno.status = False
     alumno.save()
-    return redirect(url_for('public.index'))
+    return redirect(url_for('public.docente_panel'))
 
 
 @public_bp.route("/docente/")
@@ -335,8 +306,214 @@ def api_docente_horario(docente_id):
     })
 
 
+MATERIA_COLUMNS_MAP = {
+    'Español': 'español',
+    'Matemáticas': 'matematicas',
+    'Ciencias': 'ciencias',
+    'Geografía': 'geografia',
+    'Historia': 'historia',
+    'Formación Cívica y Ética': 'f_civica',
+    'Inglés': 'ingles',
+    'Artes': 'artes',
+    'Fortalecimiento de Español': 'f_español',
+    'Fortalecimiento de Matemáticas': 'f_matematicas',
+    'Tecnología': 'tecnologia',
+}
+
+
+@public_bp.route("/api/grupos", methods=['GET'])
+@login_required
+def api_get_grupos():
+    from app.models import Grupos
+    grupos = Grupos.query.all()
+    return jsonify([
+        {'id': g.id, 'grado': g.grado, 'grupo': g.grupo, 'nombre': f"{g.grado}° {g.grupo}"}
+        for g in grupos
+    ])
+
+
+@public_bp.route("/api/materia/<int:materia_id>/alumnos", methods=['GET'])
+@login_required
+def api_materia_alumnos(materia_id):
+    materia = Materia.query.get_or_404(materia_id)
+    alumnos = Alumno.query.order_by(Alumno.lastname_p.asc(), Alumno.lastname_m.asc(), Alumno.name.asc()).all()
+
+    col_name = MATERIA_COLUMNS_MAP.get(materia.nombre)
+
+    result = []
+    for a in alumnos:
+        calif_obj = a.calificaciones[0] if a.calificaciones else None
+        calif_val = getattr(calif_obj, col_name, None) if calif_obj and col_name else None
+
+        all_califs = {}
+        if calif_obj:
+            for m_nombre, m_col in MATERIA_COLUMNS_MAP.items():
+                val = getattr(calif_obj, m_col, None)
+                all_califs[m_nombre] = float(val) if val is not None else None
+
+        anotacion = AnotacionAlumno.get_by_alumno(a.id)
+        grupo_text = f"{a.grupo_info.grado}° {a.grupo_info.grupo}" if a.grupo_info else "Sin grupo"
+
+        result.append({
+            'id': a.id,
+            'nombre': a.name,
+            'lastname_p': a.lastname_p,
+            'lastname_m': a.lastname_m,
+            'full_name': a.full_name,
+            'group_id': a.group_id,
+            'grupo_text': grupo_text,
+            'genero': a.genero,
+            'status': a.status,
+            'codigo': a.password,
+            'calificacion_materia': float(calif_val) if calif_val is not None else None,
+            'todas_calificaciones': all_califs,
+            'nota_texto': anotacion.texto if anotacion else ''
+        })
+
+    is_admin = (current_user.email == 'admin@example.com' or getattr(current_user, 'is_admin', False))
+
+    return jsonify({
+        'materia': materia.to_dict(),
+        'is_admin_user': is_admin,
+        'alumnos': result
+    })
+
+
+@public_bp.route("/api/admin/alumnos", methods=['GET'])
+@login_required
+def api_admin_alumnos():
+    is_admin = (current_user.email == 'admin@example.com' or getattr(current_user, 'is_admin', False))
+    if not is_admin:
+        return jsonify({'error': 'No autorizado'}), 403
+
+    alumnos = Alumno.query.order_by(Alumno.lastname_p.asc(), Alumno.lastname_m.asc(), Alumno.name.asc()).all()
+    result = []
+
+    for a in alumnos:
+        calif_obj = a.calificaciones[0] if a.calificaciones else None
+        all_califs = {}
+        if calif_obj:
+            for m_nombre, m_col in MATERIA_COLUMNS_MAP.items():
+                val = getattr(calif_obj, m_col, None)
+                all_califs[m_nombre] = float(val) if val is not None else None
+
+        anotacion = AnotacionAlumno.get_by_alumno(a.id)
+        grupo_text = f"{a.grupo_info.grado}° {a.grupo_info.grupo}" if a.grupo_info else "Sin grupo"
+
+        result.append({
+            'id': a.id,
+            'nombre': a.name,
+            'lastname_p': a.lastname_p,
+            'lastname_m': a.lastname_m,
+            'full_name': a.full_name,
+            'group_id': a.group_id,
+            'grupo_text': grupo_text,
+            'genero': a.genero,
+            'status': a.status,
+            'codigo': a.password,
+            'calificacion_materia': None,
+            'todas_calificaciones': all_califs,
+            'nota_texto': anotacion.texto if anotacion else ''
+        })
+
+    return jsonify({
+        'materia': None,
+        'is_admin_user': True,
+        'alumnos': result
+    })
+
+
+@public_bp.route("/api/alumno/<int:alumno_id>/baja_logica", methods=['POST'])
+@login_required
+def api_alumno_baja_logica(alumno_id):
+    alumno = Alumno.query.get_or_404(alumno_id)
+    alumno.status = False
+    alumno.save()
+    return jsonify({'success': True, 'message': f'Alumno {alumno.full_name} dado de baja.'})
+
+
+@public_bp.route("/api/alumno/<int:alumno_id>/update_docente", methods=['POST'])
+@login_required
+def api_alumno_update_docente(alumno_id):
+    try:
+        ensure_required_tables()
+        alumno = Alumno.query.get_or_404(alumno_id)
+        data = request.get_json(silent=True) or {}
+
+        if 'name' in data and data['name']:
+            alumno.name = data['name']
+        if 'lastname_p' in data and data['lastname_p']:
+            alumno.lastname_p = data['lastname_p']
+        if 'lastname_m' in data:
+            alumno.lastname_m = data['lastname_m']
+        if 'group_id' in data and data['group_id']:
+            alumno.group_id = int(data['group_id'])
+        if 'genero' in data and data['genero']:
+            alumno.genero = data['genero']
+        if 'status' in data:
+            alumno.status = bool(data['status'])
+        if 'codigo' in data and data['codigo']:
+            alumno.password = data['codigo']
+
+        alumno.save()
+
+        if alumno.calificaciones:
+            calificacion = alumno.calificaciones[0]
+        else:
+            calificacion = Calificacion(alumnos_id=alumno.id)
+            alumno.calificaciones.append(calificacion)
+
+        is_admin = (current_user.email == 'admin@example.com' or getattr(current_user, 'is_admin', False))
+
+        if is_admin and 'todas_calificaciones' in data and isinstance(data['todas_calificaciones'], dict):
+            for m_nombre, m_col in MATERIA_COLUMNS_MAP.items():
+                if m_nombre in data['todas_calificaciones']:
+                    val = data['todas_calificaciones'][m_nombre]
+                    setattr(calificacion, m_col, float(val) if val is not None and val != '' else None)
+        elif 'materia_nombre' in data and 'calificacion' in data:
+            m_nombre = data['materia_nombre']
+            m_col = MATERIA_COLUMNS_MAP.get(m_nombre)
+            if m_col:
+                val = data['calificacion']
+                setattr(calificacion, m_col, float(val) if val is not None and val != '' else None)
+
+        calificacion.save()
+        return jsonify({'success': True, 'alumno': alumno.to_dict()})
+    except Exception as exc:
+        logger.exception('Error guardando la calificación del alumno %s', alumno_id)
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
+@public_bp.route("/api/alumno/<int:alumno_id>/nota", methods=['GET', 'POST'])
+@login_required
+def api_alumno_nota(alumno_id):
+    try:
+        ensure_required_tables()
+        alumno = Alumno.query.get_or_404(alumno_id)
+        if request.method == 'GET':
+            nota = AnotacionAlumno.get_by_alumno(alumno_id)
+            return jsonify({'texto': nota.texto if nota else ''})
+
+        data = request.get_json(silent=True) or {}
+        texto = (data.get('texto') or '').strip()
+        nota = AnotacionAlumno.get_by_alumno(alumno_id)
+
+        if nota is None:
+            nota = AnotacionAlumno(alumno_id=alumno.id, docente_id=current_user.id, texto=texto)
+        else:
+            nota.texto = texto
+            nota.docente_id = current_user.id
+
+        nota.save()
+        return jsonify({'success': True, 'texto': nota.texto, 'alumno_id': alumno.id})
+    except Exception as exc:
+        logger.exception('Error guardando la nota del alumno %s', alumno_id)
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
+
 @public_bp.route("/error")
 @login_required
 def show_error():
     res = 1 / 0
     return "Error"
+

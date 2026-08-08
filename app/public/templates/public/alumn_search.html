@@ -1,61 +1,185 @@
 {% extends "base_template.html" %}
-{% block title %}Buscar Alumno{% endblock %}
+{% block title %}Buscar Alumno - Sistema de Gestión Escolar{% endblock %}
 
 {% block content %}
-<div class="relative min-h-screen">
-    <div class="mx-auto flex min-h-screen items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
-        <div class="w-full max-w-4xl overflow-hidden rounded-[2.5rem] border border-white/15 bg-white/95 shadow-[0_30px_80px_rgba(15,23,42,0.22)] backdrop-blur-xl">
-            <div class="bg-gradient-to-r from-sky-600 to-blue-700 p-8 text-white sm:p-10">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <p class="text-sm font-semibold uppercase tracking-[0.3em] text-sky-100">Búsqueda</p>
-                        <h1 class="mt-3 text-3xl font-semibold sm:text-4xl">Buscar datos de un alumno</h1>
-                    </div>
-                    <a href="{{ url_for('public.home') }}" class="rounded-full bg-white/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/25">← Inicio</a>
-                </div>
+<style>
+    /* Override body background to match dark blue design */
+
+    /* Hide footer on search page to fit viewport */
+    footer {
+        display: none !important;
+    }
+</style>
+
+<div class="flex min-h-screen text-white font-sans">
+    <!-- Sidebar Izquierda -->
+    <aside class="w-20 md:w-24 bg-[#4292d6] flex flex-col items-center py-8 gap-8 z-20 flex-shrink-0 shadow-lg">
+        <!-- Botón Inicio -->
+        <a href="{% if current_user.is_authenticated %}{{ url_for('public.docente_panel') }}{% else %}{{ url_for('public.home') }}{% endif %}"
+            class="flex flex-col items-center gap-1.5 text-white hover:text-sky-100 transition duration-200 group"
+            title="Inicio">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+                class="w-7 h-7 text-white group-hover:scale-105 transition-transform duration-200">
+                <path
+                    d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
+                <path
+                    d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v4.5a.75.75 0 01-.75.75H5.625c-1.036 0-1.875-.84-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+            </svg>
+            <span class="text-xs font-semibold tracking-wide">Inicio</span>
+        </a>
+
+        <!-- Botón Buscar -->
+        <a href="{{ url_for('public.buscar_alumno') }}"
+            class="flex flex-col items-center gap-1.5 text-white hover:text-sky-100 transition duration-200 group"
+            title="Buscar">
+            <div
+                class="border-2 border-white rounded-lg p-1 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3"
+                    stroke="currentColor" class="w-4 h-4 text-white">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
             </div>
+            <span class="text-xs font-semibold tracking-wide">Buscar</span>
+        </a>
+    </aside>
 
-            <div class="p-8 sm:p-10">
-                <div class="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6">
-                        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-600">Código del alumno</p>
-                        <p class="mt-3 text-lg leading-8 text-slate-600">Introduce el código manual o utiliza el escáner para cargar la información del alumno en segundos.</p>
+    <!-- Área Principal -->
+    <div class="flex-1 flex flex-col min-h-screen">
+        <!-- Topbar -->
+        <header class="h-16 bg-[#3b7db7] flex items-center justify-end px-6 z-10 flex-shrink-0 shadow-md">
+            <a href="{{ url_for('auth.login') }}" class="text-white hover:text-sky-100 transition duration-200 group"
+                title="Iniciar Sesión Docente">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+                    class="w-8 h-8 text-white group-hover:scale-105 transition-transform duration-200">
+                    <path fill-rule="evenodd"
+                        d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                        clip-rule="evenodd" />
+                </svg>
+            </a>
+        </header>
+
+        <!-- Contenido Central -->
+        <main class="flex-grow flex flex-col justify-center items-center px-6 py-12 md:py-16 gap-12">
+            <!-- Título -->
+            <h1 class="text-4xl md:text-5xl font-semibold tracking-wide text-center text-white mb-2">
+                Buscar datos de un alumno
+            </h1>
+
+            <!-- Secciones Grid (Instrucciones a la izquierda, Tarjeta a la derecha) -->
+            <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 max-w-4xl w-full px-4 items-center justify-center">
+
+                <!-- Columna Izquierda: Instrucciones -->
+                <div class="flex flex-col gap-6 max-w-md w-full">
+                    <!-- Paso 1 -->
+                    <div class="flex items-start gap-4">
+                        <span
+                            class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-slate-900 font-bold text-lg flex-shrink-0 shadow-md">
+                            1
+                        </span>
+                        <p class="text-white text-sm md:text-base leading-relaxed pt-1">
+                            Ingresa el código perteneciente al estudiante que deseas buscar.
+                        </p>
                     </div>
-                    <div class="rounded-[1.5rem] border border-slate-200 bg-sky-50 p-6">
-                        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-sky-700">Estado del escaneo</p>
-                        <p class="mt-3 text-2xl font-semibold text-slate-900">{{ request.args.get('codigoAlumno', 'Esperando código') }}</p>
+
+                    <!-- Paso 2 -->
+                    <div class="flex items-start gap-4">
+                        <span
+                            class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-slate-900 font-bold text-lg flex-shrink-0 shadow-md">
+                            2
+                        </span>
+                        <p class="text-white text-sm md:text-base leading-relaxed pt-1">
+                            Presiona el botón de buscar.
+                        </p>
+                    </div>
+
+                    <!-- Paso 3 -->
+                    <div class="flex items-start gap-4">
+                        <span
+                            class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-slate-900 font-bold text-lg flex-shrink-0 shadow-md">
+                            3
+                        </span>
+                        <p class="text-white text-sm md:text-base leading-relaxed pt-1">
+                            O presiona el botón "Escanear QR" para escanear el código usando la cámara.
+                        </p>
                     </div>
                 </div>
 
-                <form action="{{ url_for('public.calificaciones') }}" method="GET" id="searchForm" class="mt-8 space-y-6">
-                    <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
-                        <div>
-                            <label for="codigoAlumno" class="mb-2 block text-sm font-medium text-slate-700">Código del alumno</label>
-                            <input id="codigoAlumno" name="codigoAlumno" type="text" maxlength="10" autocomplete="off" required
-                                class="w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-4 text-lg text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                                placeholder="Ej: 8E4H2PJ4DA">
+                <!-- Columna Derecha: Tarjeta de Formulario de Búsqueda -->
+                <div class="w-full max-w-[400px] flex-shrink-0">
+                    <form action="" method="GET" id="searchForm"
+                        class="flex rounded-2xl overflow-hidden bg-white shadow-[8px_8px_0px_rgba(0,0,0,0.3)] border border-slate-200 w-full">
+                        <!-- Lado Izquierdo (Contenido Blanco de la Tarjeta) -->
+                        <div class="flex-grow p-6 md:p-8 flex flex-col gap-6">
+                            <h2 class="text-slate-900 text-lg md:text-xl font-bold text-center leading-snug">
+                                Ingresa el código del<br>alumno
+                            </h2>
+
+                            <!-- Campo Código -->
+                            <div class="flex items-center gap-3">
+                                <label for="codigoAlumno"
+                                    class="text-slate-900 font-bold text-sm md:text-base whitespace-nowrap">
+                                    Código:
+                                </label>
+                                <input type="text" id="codigoAlumno" name="codigoAlumno" maxlength="10"
+                                    autocomplete="off" required
+                                    class="flex-grow bg-[#c0c0c0] text-slate-900 rounded-lg px-2 py-1.5 border-none outline-none font-bold text-center tracking-wide focus:ring-2 focus:ring-sky-400">
+                            </div>
+
+                            <!-- Botón Escanear QR -->
+                            <div class="flex justify-center mt-2">
+                                <button type="button" id="btnScanQr"
+                                    class="bg-[#54d2f8] text-slate-950 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-[#3ec3ea] transition duration-200 shadow-sm flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                                    </svg>
+                                    Escanear QR
+                                </button>
+                            </div>
                         </div>
-                        <button type="button" id="btnScanQr"
-                            class="inline-flex min-h-[72px] items-center justify-center rounded-[1.25rem] bg-slate-950 px-6 text-sm font-semibold text-white transition hover:bg-slate-800">
-                            Escanear QR
+
+                        <!-- Lado Derecho (Barra Gris del Botón de Búsqueda) -->
+                        <button type="submit"
+                            class="w-8 bg-[#888888] hover:bg-slate-500 transition duration-200 flex items-center justify-center border-none cursor-pointer flex-shrink-0"
+                            style="cursor: pointer;" title="Buscar Código">
+                            <!-- Icono Puerta con Flecha a la Derecha (Sólido con estilo inline garantizado) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+                                style="width: 24px; height: 24px; color: white; display: block;">
+                                <path
+                                    d="M10 5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4a1 1 0 1 0 0-2h-3V7h3a1 1 0 1 0 0-2h-4z" />
+                                <path
+                                    d="M14.293 8.293a1 1 0 0 1 1.414 0l3 3a1 1 0 0 1 0 1.414l-3 3a1 1 0 0 1-1.414-1.414L15.586 13H11a1 1 0 1 1 0-2h4.586l-1.293-1.293a1 1 0 0 1 0-1.414z" />
+                            </svg>
                         </button>
-                    </div>
-
-                    <button type="submit" class="w-full rounded-[1.25rem] bg-sky-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:bg-sky-500">Buscar</button>
-                </form>
-
-                <div id="qrScannerContainer" class="mt-8 hidden rounded-[1.75rem] border border-slate-200 bg-slate-950/95 p-6 shadow-xl shadow-slate-950/20">
-                    <div class="mb-4 flex items-center justify-between gap-4">
-                        <div>
-                            <p class="text-sm uppercase tracking-[0.25em] text-sky-400">Escáner QR</p>
-                            <p class="mt-2 text-sm text-slate-300">Coloca el código QR frente a la cámara para completar el campo automáticamente.</p>
-                        </div>
-                        <button type="button" id="btnCloseScanner" class="rounded-full bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:bg-slate-700">Cerrar</button>
-                    </div>
-                    <div id="qrReader" class="h-[320px] rounded-[1.5rem] bg-slate-900"></div>
+                    </form>
                 </div>
             </div>
+        </main>
+    </div>
+</div>
+
+<!-- Modal del Escáner QR -->
+<div id="qrScannerModal"
+    class="fixed inset-0 bg-black/85 hidden flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+    <div
+        class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-sm w-full flex flex-col gap-4 shadow-2xl animate-fade-in">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <h3 class="text-white font-bold text-lg">Escáner de Código QR</h3>
+            <button type="button" id="btnCloseScanner"
+                class="text-slate-400 hover:text-white font-semibold text-sm transition duration-200 px-2 py-1">
+                Cerrar
+            </button>
         </div>
+        <div class="w-full aspect-square rounded-2xl overflow-hidden bg-slate-950 relative">
+            <div id="qrReader" class="w-full h-full"></div>
+        </div>
+        <p class="text-slate-400 text-xs text-center">
+            Apunta la cámara de tu dispositivo hacia el código QR de la credencial del alumno.
+        </p>
     </div>
 </div>
 
@@ -65,13 +189,23 @@
         const inputCodigo = document.getElementById('codigoAlumno');
         const btnScan = document.getElementById('btnScanQr');
         const btnClose = document.getElementById('btnCloseScanner');
-        const scannerContainer = document.getElementById('qrScannerContainer');
+        const scannerModal = document.getElementById('qrScannerModal');
         const searchForm = document.getElementById('searchForm');
 
         let html5QrCode = null;
 
+        searchForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const codigo = (inputCodigo.value || '').trim();
+            if (!codigo) {
+                inputCodigo.focus();
+                return;
+            }
+            window.location.href = `/api/alumno/${encodeURIComponent(codigo)}/calificaciones`;
+        });
+
         btnScan.addEventListener('click', function () {
-            scannerContainer.classList.remove('hidden');
+            scannerModal.classList.remove('hidden');
 
             if (!html5QrCode) {
                 html5QrCode = new Html5Qrcode('qrReader');
@@ -79,40 +213,53 @@
 
             const config = {
                 fps: 10,
-                qrbox: { width: 280, height: 280 }
+                qrbox: { width: 250, height: 250 }
             };
 
             Html5Qrcode.getCameras().then(function (cameras) {
                 if (!cameras.length) {
-                    alert('No se encontraron cámaras disponibles.');
-                    scannerContainer.classList.add('hidden');
+                    alert('No se encontraron cámaras en este dispositivo.');
+                    scannerModal.classList.add('hidden');
                     return;
                 }
 
-                const cameraId = cameras[0].id;
+                // Intentar usar la cámara trasera si está disponible
+                let selectedCameraId = cameras[0].id;
+                for (let i = 0; i < cameras.length; i++) {
+                    if (cameras[i].label.toLowerCase().includes('back') || cameras[i].label.toLowerCase().includes('trasera')) {
+                        selectedCameraId = cameras[i].id;
+                        break;
+                    }
+                }
 
-                html5QrCode.start(cameraId, config, function (decodedText) {
+                html5QrCode.start(selectedCameraId, config, function (decodedText) {
                     inputCodigo.value = decodedText;
-                    html5QrCode.stop().catch(function () {});
-                    scannerContainer.classList.add('hidden');
+                    html5QrCode.stop().catch(function () { });
+                    scannerModal.classList.add('hidden');
                     searchForm.submit();
                 }, function () {
+                    // callback de error de lectura silencioso
                 }).catch(function (err) {
-                    alert('No se pudo iniciar el escaneo: ' + err);
-                    scannerContainer.classList.add('hidden');
+                    alert('Error al iniciar la cámara: ' + err);
+                    scannerModal.classList.add('hidden');
                 });
-            }).catch(function () {
-                alert('No se pudo acceder a la cámara. Verifica los permisos.');
-                scannerContainer.classList.add('hidden');
+            }).catch(function (err) {
+                alert('No se pudo acceder a la cámara. Revisa los permisos del navegador.');
+                scannerModal.classList.add('hidden');
             });
         });
 
         if (btnClose) {
             btnClose.addEventListener('click', function () {
                 if (html5QrCode) {
-                    html5QrCode.stop().catch(function () {});
+                    html5QrCode.stop().then(() => {
+                        scannerModal.classList.add('hidden');
+                    }).catch(function () {
+                        scannerModal.classList.add('hidden');
+                    });
+                } else {
+                    scannerModal.classList.add('hidden');
                 }
-                scannerContainer.classList.add('hidden');
             });
         }
     });

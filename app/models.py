@@ -1,7 +1,7 @@
 import datetime
 
 from slugify import slugify
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, ProgrammingError
 
 from app import db
 from app.auth.models import Docente
@@ -120,6 +120,7 @@ class Alumno(db.Model):
     password = db.Column('pass', db.String(10), nullable=False)
 
     calificaciones = db.relationship('Calificacion', backref='alumno', lazy=True)
+    anotaciones = db.relationship('AnotacionAlumno', backref='alumno', lazy=True)
 
     def __init__(self, name, lastname_p, lastname_m, group_id, genero, password, status=True):
         self.name = name
@@ -227,6 +228,42 @@ class Calificacion(db.Model):
     def delete(self):
         db.session.delete(self)
         db.session.commit()
+
+
+class AnotacionAlumno(db.Model):
+    __tablename__ = 'anotaciones_alumno'
+    __table_args__ = {'schema': 'alejandra'}
+
+    id = db.Column(db.Integer, primary_key=True)
+    alumno_id = db.Column(db.Integer, db.ForeignKey('alejandra.alumnos.id'), nullable=False)
+    docente_id = db.Column(db.Integer, db.ForeignKey('alejandra.docentes.id'), nullable=True)
+    texto = db.Column(db.Text, nullable=False, default='')
+    creado_en = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    actualizado_en = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    docente = db.relationship('Docente', backref='anotaciones_alumno')
+
+    def __init__(self, alumno_id, texto='', docente_id=None):
+        self.alumno_id = alumno_id
+        self.texto = texto
+        self.docente_id = docente_id
+
+    def save(self):
+        if not self.id:
+            db.session.add(self)
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    @staticmethod
+    def get_by_alumno(alumno_id):
+        try:
+            return AnotacionAlumno.query.filter_by(alumno_id=alumno_id).first()
+        except ProgrammingError:
+            return None
+
 
 class HistorialLog(db.Model):
     __tablename__ = 'historial_logs'

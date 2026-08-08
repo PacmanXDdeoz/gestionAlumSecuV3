@@ -1,60 +1,125 @@
 {% extends "base_template.html" %}
-
-{% block title %}Iniciar sesión{% endblock %}
+{% block title %}Iniciar sesión - Sistema de Gestión Escolar{% endblock %}
 
 {% block content %}
-<div class="login-wrapper">
-    <a href="{{ url_for('public.home') }}" class="login-back-link">← Volver al inicio</a>
+<style>
+    /* Override body background to match dark blue design */
+    body {
+        background-color: #1e3e62 !important;
+    }
+    /* Hide footer on login page to fit viewport */
+    footer {
+        display: none !important;
+    }
+</style>
 
-    <div class="login-card">
-        <div class="login-header">
-            <div class="login-icon">👨‍🏫</div>
-            <h2>Iniciar sesión</h2>
-            <p class="login-subtitle">Accede al panel de gestión docente</p>
-        </div>
+<div class="flex min-h-screen text-white font-sans">
+    <!-- Sidebar Izquierda -->
+    <aside class="w-20 md:w-24 bg-[#4292d6] flex flex-col items-center py-8 gap-8 z-20 flex-shrink-0 shadow-lg">
+        <!-- Botón Inicio -->
+        <a href="{% if current_user.is_authenticated %}{{ url_for('public.docente_panel') }}{% else %}{{ url_for('public.home') }}{% endif %}" 
+           class="flex flex-col items-center gap-1.5 text-white hover:text-sky-100 transition duration-200 group"
+           title="Inicio">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-7 h-7 text-white group-hover:scale-105 transition-transform duration-200">
+                <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
+                <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v4.5a.75.75 0 01-.75.75H5.625c-1.036 0-1.875-.84-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+            </svg>
+            <span class="text-xs font-semibold tracking-wide">Inicio</span>
+        </a>
 
-        {% if error %}
-        <div class="alert-error">
-            {{ error }}
-        </div>
-        {% endif %}
-
-        <form action="" method="post" novalidate class="login-form">
-            {{ form.hidden_tag() }}
-
-            <div class="login-field">
-                {{ form.email.label }}
-                <div class="login-input-wrapper">
-                    <span class="login-input-icon">📧</span>
-                    {{ form.email(placeholder="tu@correo.com", class_="login-input") }}
-                </div>
-                {% for error in form.email.errors %}
-                <span class="login-error">{{ error }}</span>
-                {% endfor %}
+        <!-- Botón Buscar -->
+        <a href="{{ url_for('public.buscar_alumno') }}" 
+           class="flex flex-col items-center gap-1.5 text-white hover:text-sky-100 transition duration-200 group"
+           title="Buscar">
+            <div class="border-2 border-white rounded-lg p-1 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-white">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
             </div>
+            <span class="text-xs font-semibold tracking-wide">Buscar</span>
+        </a>
+    </aside>
 
-            <div class="login-field">
-                {{ form.password.label }}
-                <div class="login-input-wrapper">
-                    <span class="login-input-icon">🔒</span>
-                    {{ form.password(placeholder="••••••••", class_="login-input") }}
+    <!-- Área Principal -->
+    <div class="flex-1 flex flex-col min-h-screen">
+        <!-- Topbar -->
+        <header class="h-16 bg-[#3b7db7] flex items-center justify-end px-6 z-10 flex-shrink-0 shadow-md">
+            <a href="{{ url_for('auth.login') }}" 
+               class="text-white hover:text-sky-100 transition duration-200 group"
+               title="Iniciar Sesión Docente">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-8 h-8 text-white group-hover:scale-105 transition-transform duration-200">
+                    <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                </svg>
+            </a>
+        </header>
+
+        <!-- Contenido Central -->
+        <main class="flex-grow flex flex-col justify-center items-center px-6 py-12 md:py-16 gap-6">
+            <!-- Título de Bienvenida -->
+            <h1 class="text-4xl md:text-5xl font-semibold tracking-wide text-center text-white mb-2">
+                Panel de Docentes
+            </h1>
+
+            <!-- Tarjeta de Login -->
+            <div class="w-full max-w-[380px] bg-white rounded-2xl p-6 md:p-8 shadow-[8px_8px_0px_rgba(0,0,0,0.3)] border border-slate-200 flex flex-col gap-6 text-slate-900">
+                <div class="text-center">
+                    <h2 class="text-slate-900 text-xl md:text-2xl font-bold leading-snug">
+                        Iniciar sesión
+                    </h2>
+                    <p class="text-slate-500 text-xs md:text-sm mt-1">Accede al panel de gestión escolar</p>
                 </div>
-                {% for error in form.password.errors %}
-                <span class="login-error">{{ error }}</span>
-                {% endfor %}
+
+                <!-- Mensaje de Error Global -->
+                {% if error %}
+                <div class="bg-rose-50 border-l-4 border-rose-500 text-rose-700 p-3 rounded-lg text-xs md:text-sm font-semibold">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <!-- Formulario -->
+                <form action="" method="post" novalidate class="flex flex-col gap-4">
+                    {{ form.hidden_tag() }}
+
+                    <!-- Campo: Correo -->
+                    <div class="flex flex-col">
+                        <label for="{{ form.email.id }}" class="text-slate-700 font-bold text-xs md:text-sm mb-1.5 flex items-center gap-1.5">
+                            <span>📧</span> {{ form.email.label.text }}
+                        </label>
+                        {{ form.email(placeholder="tu@correo.com", class_="w-full bg-[#c0c0c0] text-slate-900 rounded-lg px-3 py-2 border-none outline-none font-semibold text-center placeholder-slate-500 focus:ring-2 focus:ring-sky-400") }}
+                        {% for error in form.email.errors %}
+                        <span class="text-rose-600 text-xs font-bold mt-1 block">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Campo: Contraseña -->
+                    <div class="flex flex-col">
+                        <label for="{{ form.password.id }}" class="text-slate-700 font-bold text-xs md:text-sm mb-1.5 flex items-center gap-1.5">
+                            <span>🔒</span> {{ form.password.label.text }}
+                        </label>
+                        {{ form.password(placeholder="••••••••", class_="w-full bg-[#c0c0c0] text-slate-900 rounded-lg px-3 py-2 border-none outline-none font-semibold text-center placeholder-slate-500 focus:ring-2 focus:ring-sky-400") }}
+                        {% for error in form.password.errors %}
+                        <span class="text-rose-600 text-xs font-bold mt-1 block">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Campo: Recordar sesión -->
+                    <label class="flex items-center gap-2 cursor-pointer my-1 text-slate-700 text-xs md:text-sm font-semibold">
+                        {{ form.remember_me(class="rounded border-slate-300 text-sky-600 focus:ring-sky-400 w-4 h-4 cursor-pointer") }}
+                        <span>{{ form.remember_me.label.text }}</span>
+                    </label>
+
+                    <!-- Botón Enviar -->
+                    <div class="mt-2">
+                        {{ form.submit(class_='w-full bg-[#54d2f8] text-slate-950 py-2.5 rounded-full font-bold text-sm hover:bg-[#3ec3ea] transition duration-200 shadow-sm cursor-pointer border-none') }}
+                    </div>
+                </form>
+
+                <!-- Pie de la Tarjeta -->
+                <div class="text-center border-t border-slate-100 pt-4 text-[10px] md:text-xs text-slate-400">
+                    <p>¿Problemas para acceder? Contacta al administrador</p>
+                </div>
             </div>
-
-            <label class="login-checkbox">
-                {{ form.remember_me() }}
-                <span>{{ form.remember_me.label.text }}</span>
-            </label>
-
-            {{ form.submit(class_='login-btn-submit') }}
-        </form>
-
-        <div class="login-footer-text">
-            <p>¿Problemas para acceder? Contacta al administrador</p>
-        </div>
+        </main>
     </div>
 </div>
 {% endblock %}

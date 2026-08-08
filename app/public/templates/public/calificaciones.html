@@ -1,127 +1,203 @@
 {% extends "base_template.html" %}
-{% block title %}Calificaciones{% endblock %}
+{% block title %}Calificaciones - Sistema de Gestión Escolar{% endblock %}
 
 {% block content %}
-<div class="relative min-h-screen">
-    <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div class="mb-8 flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-slate-950/70 px-6 py-6 shadow-2xl shadow-slate-950/20 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-8">
-            <div>
-                <p class="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">Resultado del alumno</p>
-                <h1 class="mt-3 text-3xl font-semibold text-white sm:text-4xl">Calificaciones</h1>
-            </div>
-            <div class="flex flex-wrap gap-3">
-                <a href="{{ url_for('public.home') }}" class="rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20">Inicio</a>
-                <a href="{{ url_for('public.buscar_alumno') }}" class="rounded-full bg-sky-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-400">Buscar otro</a>
-            </div>
-        </div>
+<style>
+    /* Override body background to match dark blue design */
+    body {
+        background-color: #1e3e62 !important;
+    }
+    /* Hide footer on search page to fit viewport */
+    footer {
+        display: none !important;
+    }
+</style>
 
-        {% if alumno %}
-        <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div class="space-y-6">
-                <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-                    <h2 class="text-xl font-semibold text-slate-900">Datos personales</h2>
-                    <div class="mt-6 grid gap-4 sm:grid-cols-2">
-                        <div class="rounded-[1.25rem] bg-slate-50 p-5">
-                            <p class="text-sm uppercase tracking-[0.2em] text-slate-500">Nombre</p>
-                            <p class="mt-3 text-lg font-semibold text-slate-900">{{ alumno.name }} {{ alumno.lastname_p }} {{ alumno.lastname_m }}</p>
-                        </div>
-                        <div class="rounded-[1.25rem] bg-slate-50 p-5">
-                            <p class="text-sm uppercase tracking-[0.2em] text-slate-500">Grupo</p>
-                            <p class="mt-3 text-lg font-semibold text-slate-900">{{ alumno.grupo_info.grado }}° {{ alumno.grupo_info.grupo }}</p>
-                        </div>
+<div class="flex min-h-screen text-white font-sans">
+    <!-- Sidebar Izquierda -->
+    <aside class="w-20 md:w-24 bg-[#4292d6] flex flex-col items-center py-8 gap-8 z-20 flex-shrink-0 shadow-lg">
+        <!-- Botón Inicio -->
+        <a href="{% if current_user.is_authenticated %}{{ url_for('public.docente_panel') }}{% else %}{{ url_for('public.home') }}{% endif %}" 
+           class="flex flex-col items-center gap-1.5 text-white hover:text-sky-100 transition duration-200 group"
+           title="Inicio">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-7 h-7 text-white group-hover:scale-105 transition-transform duration-200">
+                <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
+                <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v4.5a.75.75 0 01-.75.75H5.625c-1.036 0-1.875-.84-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+            </svg>
+            <span class="text-xs font-semibold tracking-wide">Inicio</span>
+        </a>
+
+        <!-- Botón Buscar -->
+        <a href="{{ url_for('public.buscar_alumno') }}" 
+           class="flex flex-col items-center gap-1.5 text-white hover:text-sky-100 transition duration-200 group"
+           title="Buscar">
+            <div class="border-2 border-white rounded-lg p-1 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-white">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+            </div>
+            <span class="text-xs font-semibold tracking-wide">Buscar</span>
+        </a>
+    </aside>
+
+    <!-- Área Principal -->
+    <div class="flex-1 flex flex-col min-h-screen">
+        <!-- Topbar -->
+        <header class="h-16 bg-[#3b7db7] flex items-center justify-end px-6 z-10 flex-shrink-0 shadow-md">
+            <a href="{{ url_for('auth.login') }}" 
+               class="text-white hover:text-sky-100 transition duration-200 group"
+               title="Iniciar Sesión Docente">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-8 h-8 text-white group-hover:scale-105 transition-transform duration-200">
+                    <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                </svg>
+            </a>
+        </header>
+
+        <!-- Contenido Central -->
+        <main class="flex-grow px-6 py-8 md:py-12 max-w-7xl mx-auto w-full flex flex-col gap-8">
+            {% if alumno %}
+            <!-- Sección Superior: Tarjetas de Información del Alumno -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                <!-- Tarjeta 1: Datos del alumno -->
+                <div class="bg-[#bce3ff] rounded-2xl p-5 text-slate-900 shadow-md flex flex-col justify-between min-h-[120px]">
+                    <span class="text-slate-800 text-xs font-bold uppercase tracking-wider block mb-2">Datos del alumno</span>
+                    <div>
+                        <p class="text-sm font-semibold">Nombre: <span class="font-bold uppercase block sm:inline">{{ alumno.name }} {{ alumno.lastname_p }} {{ alumno.lastname_m }}</span></p>
+                        <p class="text-sm font-semibold mt-1">Grupo: <span class="font-bold">{{ alumno.grupo_info.grado }}° {{ alumno.grupo_info.grupo }}</span></p>
                     </div>
                 </div>
 
-                <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-                    <h2 class="text-xl font-semibold text-slate-900">Profesor y tutor</h2>
-                    <div class="mt-6 grid gap-4 sm:grid-cols-2">
-                        <div class="rounded-[1.25rem] bg-sky-50 p-5">
-                            <p class="text-sm uppercase tracking-[0.2em] text-sky-600">Tutor</p>
-                            <p class="mt-3 text-lg font-semibold text-slate-900">Prof. Alejandra Vázquez Cruz</p>
-                        </div>
-                        <div class="rounded-[1.25rem] bg-slate-50 p-5">
-                            <p class="text-sm uppercase tracking-[0.2em] text-slate-500">Código</p>
-                            <p class="mt-3 text-lg font-semibold text-slate-900">{{ alumno.password }}</p>
-                        </div>
+                <!-- Tarjeta 2: Tutor -->
+                <div class="bg-[#bce3ff] rounded-2xl p-5 text-slate-900 shadow-md flex flex-col justify-between min-h-[120px]">
+                    <span class="text-slate-800 text-xs font-bold uppercase tracking-wider block mb-2">Tutor</span>
+                    <div>
+                        <p class="text-base font-bold">Prof. Alejandra Vázquez Cruz</p>
                     </div>
                 </div>
-            </div>
 
-            <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-                <p class="text-sm font-semibold uppercase tracking-[0.25em] text-slate-500">Código QR</p>
-                <div class="mt-6 flex min-h-[260px] items-center justify-center rounded-[1.75rem] bg-slate-50 p-6">
+                <!-- Tarjeta 3: Código de alumno + Botón Buscar -->
+                <div class="flex rounded-2xl overflow-hidden bg-white shadow-md border border-slate-200 min-h-[120px]">
+                    <div class="flex-grow p-5 text-slate-900 flex flex-col justify-between">
+                        <span class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-2">Código de alumno</span>
+                        <p class="text-lg font-bold tracking-wider">{{ alumno.password }}</p>
+                    </div>
+                    <a href="{{ url_for('public.buscar_alumno') }}" 
+                       class="w-16 bg-[#888888] hover:bg-slate-500 transition duration-200 flex items-center justify-center border-none cursor-pointer flex-shrink-0"
+                       style="cursor: pointer;"
+                       title="Buscar otro alumno">
+                        <!-- Icono Puerta con Flecha a la Derecha (Sólido con estilo inline) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" style="width: 24px; height: 24px; color: white; display: block;">
+                            <path d="M10 5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4a1 1 0 1 0 0-2h-3V7h3a1 1 0 1 0 0-2h-4z" />
+                            <path d="M14.293 8.293a1 1 0 0 1 1.414 0l3 3a1 1 0 0 1 0 1.414l-3 3a1 1 0 0 1-1.414-1.414L15.586 13H11a1 1 0 1 1 0-2h4.586l-1.293-1.293a1 1 0 0 1 0-1.414z" />
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Tarjeta 4: Código QR -->
+                <div class="bg-white rounded-2xl p-5 text-slate-900 shadow-md flex flex-col justify-between items-center min-h-[120px]">
+                    <span class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-1">Código QR</span>
                     {% if alumno.codigo_qr %}
-                    <img src="{{ url_for('static', filename=alumno.codigo_qr) }}" alt="QR del alumno" class="h-56 w-56 object-contain" />
+                    <img src="{{ url_for('static', filename=alumno.codigo_qr) }}" alt="QR del alumno" class="h-16 w-16 object-contain" />
                     {% else %}
-                    <div class="text-center text-slate-500">QR no disponible</div>
+                    <span class="text-xs text-slate-400 font-semibold">QR no disponible</span>
                     {% endif %}
                 </div>
             </div>
-        </div>
 
-        <div class="mt-8 rounded-[2rem] border border-slate-200 bg-white/95 p-8 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h2 class="text-xl font-semibold text-slate-900">Materias y calificaciones</h2>
-                    <p class="mt-2 text-sm text-slate-500">Se visualizan las materias con colores según el desempeño.</p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    <span class="rounded-full bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-700">9 - 10</span>
-                    <span class="rounded-full bg-amber-500/15 px-4 py-2 text-sm font-semibold text-amber-700">8</span>
-                    <span class="rounded-full bg-slate-600/15 px-4 py-2 text-sm font-semibold text-slate-700">7 o menos</span>
-                </div>
-            </div>
+            <!-- Separador / Título de Materias -->
+            <div class="mt-4">
+                <h2 class="text-3xl font-bold tracking-wide mb-4">Materias y calificaciones</h2>
+                <!-- Contenedor Materias y calificaciones -->
+                <div class="bg-[#3b7db7] rounded-2xl p-6 shadow-lg">
+                    {% set materias_calificadas = [] %}
+                    {% for materia in materias %}
+                        {% if materia.nota is not none %}
+                            {% set _ = materias_calificadas.append(materia) %}
+                        {% endif %}
+                    {% endfor %}
 
-            {% if materias %}
-            <div class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {% for materia in materias %}
-                    {% set valor = materia.nota if materia.nota is not none else 0 %}
-                    {% if valor >= 9 %}
-                        {% set bg = 'bg-emerald-500' %}
-                        {% set text = 'text-white' %}
-                    {% elif valor == 8 %}
-                        {% set bg = 'bg-amber-500' %}
-                        {% set text = 'text-slate-950' %}
-                    {% elif valor >= 7 %}
-                        {% set bg = 'bg-slate-600' %}
-                        {% set text = 'text-white' %}
-                    {% else %}
-                        {% set bg = 'bg-red-500' %}
-                        {% set text = 'text-white' %}
-                    {% endif %}
-
-                <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                    <div class="flex items-center justify-between gap-4">
-                        <div>
-                            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{{ materia.nombre }}</p>
-                            <p class="mt-3 text-2xl font-semibold text-slate-900">{{ materia.nota if materia.nota is not none else '-' }}</p>
-                        </div>
-                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl {{ bg }} {{ text }}">
-                            {{ materia.nota if materia.nota is not none else '—' }}
-                        </div>
+                    {% if materias_calificadas %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {% for materia in materias_calificadas %}
+                            {% set valor = materia.nota %}
+                            {% if valor >= 9 %}
+                                {% set bg_badge = 'bg-[#0bb218]' %}
+                            {% elif valor == 8 %}
+                                {% set bg_badge = 'bg-[#f59e0b]' %}
+                            {% elif valor >= 7 %}
+                                {% set bg_badge = 'bg-[#6b7280]' %}
+                            {% else %}
+                                {% set bg_badge = 'bg-[#ef4444]' %}
+                            {% endif %}
+                            
+                            <div class="flex items-center bg-white rounded-full p-1.5 shadow-md w-full">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full font-bold text-white {{ bg_badge }} flex-shrink-0">
+                                    {{ valor }}
+                                </div>
+                                <span class="ml-4 text-slate-900 font-bold text-sm md:text-base truncate pr-2">
+                                    {{ materia.nombre }}
+                                </span>
+                            </div>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <p class="text-white font-medium text-center">Este alumno aún no tiene calificaciones registradas.</p>
+                    {% endif %}
                 </div>
-                {% endfor %}
             </div>
-            {% else %}
-            <div class="mt-8 rounded-[1.5rem] bg-slate-50 p-8 text-center text-slate-500">Este alumno aún no tiene calificaciones registradas.</div>
-            {% endif %}
-        </div>
 
-        {% elif request.args.get('codigoAlumno') %}
-        <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-10 text-center shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-            <div class="mx-auto mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-rose-500/10 text-4xl text-rose-400">😕</div>
-            <h2 class="text-3xl font-semibold text-slate-900">Alumno no encontrado</h2>
-            <p class="mt-4 text-base leading-7 text-slate-600">No se encontró ningún alumno con el código: <strong>{{ request.args.get('codigoAlumno') }}</strong></p>
-            <a href="{{ url_for('public.buscar_alumno') }}" class="mt-8 inline-flex rounded-full bg-slate-950 px-8 py-4 text-sm font-semibold text-white transition hover:bg-slate-800">Intentar de nuevo</a>
-        </div>
-        {% else %}
-        <div class="rounded-[2rem] border border-slate-200 bg-white/95 p-10 text-center shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-            <h2 class="text-3xl font-semibold text-slate-900">Ingresa un código para ver las calificaciones</h2>
-            <p class="mt-4 text-base leading-7 text-slate-600">Utiliza el buscador para consultar el estado académico de un alumno.</p>
-            <a href="{{ url_for('public.buscar_alumno') }}" class="mt-8 inline-flex rounded-full bg-sky-600 px-8 py-4 text-sm font-semibold text-white transition hover:bg-sky-500">Buscar alumno</a>
-        </div>
-        {% endif %}
+            <!-- Sección Sin registrar -->
+            <div class="mt-2">
+                <h2 class="text-3xl font-bold tracking-wide mb-4">Sin registrar</h2>
+                <!-- Contenedor Sin registrar -->
+                <div class="bg-[#3b7db7] rounded-2xl p-6 shadow-lg">
+                    {% set materias_sin_calificar = [] %}
+                    {% for materia in materias %}
+                        {% if materia.nota is none %}
+                            {% set _ = materias_sin_calificar.append(materia) %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if materias_sin_calificar %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {% for materia in materias_sin_calificar %}
+                            <div class="flex items-center bg-white rounded-full p-1.5 shadow-md w-full">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full font-bold text-white bg-[#888888] flex-shrink-0">
+                                    -
+                                </div>
+                                <span class="ml-4 text-slate-900 font-bold text-sm md:text-base truncate pr-2">
+                                    {{ materia.nombre }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-white font-medium text-center">Todas las materias han sido registradas.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% else %}
+            <!-- Estado Alumno no encontrado o Sin datos -->
+            <div class="flex-grow flex flex-col items-center justify-center py-12">
+                <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center text-slate-900 shadow-xl border border-slate-200">
+                    {% if request.args.get('codigoAlumno') %}
+                    <div class="text-5xl mb-4">😕</div>
+                    <h2 class="text-2xl font-bold mb-2">Alumno no encontrado</h2>
+                    <p class="text-slate-600 mb-6">No se encontró ningún alumno con el código: <span class="font-bold">{{ request.args.get('codigoAlumno') }}</span></p>
+                    <a href="{{ url_for('public.buscar_alumno') }}" class="inline-block bg-[#54d2f8] text-slate-950 px-8 py-3 rounded-full font-bold hover:bg-[#3ec3ea] transition duration-200 shadow">
+                        Intentar de nuevo
+                    </a>
+                    {% else %}
+                    <h2 class="text-2xl font-bold mb-4">Ingresa un código para ver calificaciones</h2>
+                    <a href="{{ url_for('public.buscar_alumno') }}" class="inline-block bg-[#54d2f8] text-slate-950 px-8 py-3 rounded-full font-bold hover:bg-[#3ec3ea] transition duration-200 shadow">
+                        Buscar alumno
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </main>
     </div>
 </div>
 {% endblock %}

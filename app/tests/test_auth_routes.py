@@ -1,6 +1,7 @@
 import unittest
 
 from app import create_app
+from app.auth.models import Docente
 
 
 class AuthRouteTestCase(unittest.TestCase):
@@ -26,6 +27,13 @@ class AuthRouteTestCase(unittest.TestCase):
 
         self.assertEqual(302, res.status_code)
         self.assertIn('/login', res.location)
+
+    def test_admin_email_is_treated_as_admin(self):
+        with self.app.app_context():
+            docente = Docente(name='Admin', email='admin@example.com', apellidos='Sistema')
+            docente.set_password('123456')
+            docente.save()
+            self.assertTrue(docente.is_admin)
 
 
 if __name__ == '__main__':

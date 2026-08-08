@@ -1,185 +1,1343 @@
 {% extends "base_template.html" %}
-{% block title %}Panel Docente{% endblock %}
+{% block title %}Panel Docente — {{ docente.nombre }} {{ docente.apellidos }}{% endblock %}
 
 {% block content %}
-<div class="docente-wrapper">
-    <!-- Top Bar -->
-    <header class="docente-topbar">
-        <a href="{{ url_for('public.home') }}" class="docente-home-link">← Inicio</a>
-        <div class="docente-user">
-            <span class="docente-user-icon">👨‍🏫</span>
+<style>
+    /* =========================================
+       DOCENTE PANEL - CENTERING & SVG ICON SYSTEM
+       ========================================= */
+    :root {
+        --sidebar-bg: #3572a3;
+        --sidebar-width: 75px;
+        --header-bg: #3b7db7;
+        --main-box-bg: #1c3f66;
+        --materias-box-bg: #295482;
+        --pill-blue-btn: #90cdfa;
+        --pill-blue-btn-hover: #79bfef;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #0f172a;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .docente-page-layout {
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+        position: relative;
+    }
+
+    /* Fixed Left Sidebar */
+    .docente-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: var(--sidebar-width);
+        background-color: var(--sidebar-bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 20px;
+        z-index: 100;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .docente-sidebar-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #ffffff;
+        margin-bottom: 20px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        transition: opacity 0.2s, transform 0.2s;
+        width: 100%;
+        text-align: center;
+        padding: 4px 2px;
+    }
+
+    .docente-sidebar-link:hover {
+        opacity: 0.85;
+        transform: scale(1.05);
+    }
+
+    .docente-sidebar-icon-box {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 4px;
+    }
+
+    /* Main Area Container - Centered Alignment */
+    .docente-main-wrapper {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    /* Full-width Top Header Bar */
+    .docente-topbar {
+        width: 100%;
+        height: 60px;
+        background-color: var(--header-bg);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 30px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        box-sizing: border-box;
+    }
+
+    .docente-user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .docente-prof-title {
+        color: #ffffff;
+        font-size: 0.88rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .docente-logout-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #ffffff;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .docente-logout-link:hover {
+        transform: scale(1.06);
+    }
+
+    .docente-avatar-svg {
+        width: 32px;
+        height: 32px;
+        color: #ffffff;
+    }
+
+    .docente-logout-subtext {
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-top: 1px;
+        font-weight: 500;
+    }
+
+    /* Content Area Centered Container */
+    .docente-centered-content {
+        width: 100%;
+        max-width: 1080px;
+        padding: 30px 20px 60px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Rounded Main Content Panel matching exact screenshot */
+    .docente-content-panel {
+        background-color: var(--main-box-bg);
+        border-radius: 16px;
+        padding: 28px 32px;
+        width: 100%;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        box-sizing: border-box;
+    }
+
+    .docente-section-title {
+        color: #ffffff;
+        font-size: 1.45rem;
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 16px;
+        letter-spacing: -0.3px;
+    }
+
+    /* Materias Sub-panel */
+    .docente-materias-box {
+        background-color: var(--materias-box-bg);
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin-bottom: 28px;
+    }
+
+    .docente-materias-flex {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+    }
+
+    /* Capsule Card matching screenshot */
+    .docente-subject-capsule {
+        background-color: #ffffff;
+        border-radius: 20px;
+        padding: 4px 10px 4px 4px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        user-select: none;
+    }
+
+    .docente-subject-capsule:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+    }
+
+    .docente-capsule-accent {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        flex-shrink: 0;
+    }
+
+    .accent-espanol { background-color: #b58d00; }
+    .accent-matematicas { background-color: #b8520e; }
+    .accent-ciencias { background-color: #05b857; }
+    .accent-geografia { background-color: #0d9488; }
+    .accent-historia { background-color: #9f1239; }
+    .accent-civica { background-color: #2563eb; }
+    .accent-ingles { background-color: #4f46e5; }
+    .accent-artes { background-color: #c026d3; }
+    .accent-default { background-color: #475569; }
+
+    .docente-capsule-name {
+        color: #000000;
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.2px;
+        padding-right: 6px;
+    }
+
+    .docente-capsule-plus-btn {
+        width: 28px;
+        height: 28px;
+        background-color: #808890;
+        border-radius: 8px;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    /* Horario White Container Box */
+    .docente-horario-white-box {
+        background-color: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        min-height: 260px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        color: #1e293b;
+    }
+
+    .docente-horario-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 14px;
+    }
+
+    .docente-horario-col {
+        background-color: #f8fafc;
+        border-radius: 10px;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .docente-horario-day {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--main-box-bg);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #cbd5e1;
+        padding-bottom: 4px;
+    }
+
+    .docente-horario-card {
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        border-left: 4px solid var(--main-box-bg);
+    }
+
+    .docente-horario-time {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #2563eb;
+    }
+
+    .docente-horario-mat {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .docente-horario-salon {
+        font-size: 0.72rem;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    /* =========================================
+       MODAL POPUP SYSTEM REPLICA
+       ========================================= */
+    .docente-modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+        padding: 20px;
+    }
+
+    .docente-modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .docente-modal-card {
+        background-color: #ffffff;
+        border-radius: 24px;
+        padding: 32px 28px 24px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+        transform: scale(0.95);
+        transition: transform 0.2s ease;
+    }
+
+    .docente-modal-overlay.active .docente-modal-card {
+        transform: scale(1);
+    }
+
+    .docente-modal-card.wide {
+        max-width: 920px;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    .docente-modal-title {
+        text-align: center;
+        color: #000000;
+        font-size: 1.45rem;
+        font-weight: 800;
+        margin-top: 0;
+        margin-bottom: 24px;
+    }
+
+    .docente-modal-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .docente-pill-btn {
+        background-color: var(--pill-blue-btn);
+        color: #0f172a;
+        border: none;
+        border-radius: 16px;
+        padding: 12px 18px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        width: 100%;
+    }
+
+    .docente-pill-btn:hover {
+        background-color: var(--pill-blue-btn-hover);
+    }
+
+    .docente-pill-icon-svg {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        color: #0f172a;
+    }
+
+    .docente-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .docente-btn-volver {
+        background-color: var(--pill-blue-btn);
+        color: #0f172a;
+        border: none;
+        border-radius: 14px;
+        padding: 8px 24px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .docente-btn-volver:hover {
+        background-color: var(--pill-blue-btn-hover);
+    }
+
+    /* Modal Tables */
+    .docente-table-box {
+        width: 100%;
+        overflow-x: auto;
+        margin-top: 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+    }
+
+    .docente-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.88rem;
+    }
+
+    .docente-table th {
+        background-color: var(--main-box-bg);
+        color: #ffffff;
+        padding: 10px 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+    }
+
+    .docente-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1e293b;
+    }
+
+    .docente-badge {
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+    .badge-act { background-color: #dcfce7; color: #166534; }
+    .badge-ina { background-color: #fee2e2; color: #991b1b; }
+
+    .docente-btn-act {
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        margin-right: 4px;
+    }
+    .btn-edit { background-color: #2563eb; color: #fff; }
+    .btn-del { background-color: #dc2626; color: #fff; }
+    .btn-grade-edit { background-color: #2563eb; color: #fff; }
+    .btn-nota { background-color: #7c3aed; color: #fff; }
+    .nota-pill {
+        display: inline-block;
+        background: #ede9fe;
+        color: #4c1d95;
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        margin-top: 6px;
+    }
+
+    .docente-note-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+    }
+    .docente-note-modal.active {
+        display: flex;
+    }
+    .docente-note-card {
+        width: min(90vw, 560px);
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 24px 22px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+    }
+    .docente-note-title {
+        margin: 0 0 12px;
+        color: #1e293b;
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+    .docente-note-textarea {
+        width: 100%;
+        min-height: 180px;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 12px 14px;
+        resize: vertical;
+        box-sizing: border-box;
+        font-size: 0.96rem;
+        line-height: 1.5;
+        color: #000000;
+    }
+    .docente-note-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+    /* Edit Form */
+    .edit-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 14px;
+    }
+    .edit-form-group { display: flex; flex-direction: column; gap: 4px; }
+    .edit-form-group.full { grid-column: span 2; }
+    .edit-form-group label { font-size: 0.8rem; font-weight: 700; color: #334155; }
+    .edit-form-group input, .edit-form-group select, .edit-form-group textarea {
+        padding: 8px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 0.88rem;
+        color: #000000;
+    }
+    .edit-form-group input::placeholder, .edit-form-group textarea::placeholder {
+        color: #64748b;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        :root { --sidebar-width: 60px; }
+        .docente-centered-content { padding: 16px 10px 40px; }
+        .docente-content-panel { padding: 18px 14px; }
+        .docente-prof-title { font-size: 0.75rem; }
+        .edit-form-grid { grid-template-columns: 1fr; }
+        .edit-form-group.full { grid-column: span 1; }
+    }
+</style>
+
+<div class="docente-page-layout">
+    <!-- Left Sidebar with SVG Icons -->
+    <aside class="docente-sidebar">
+        <!-- Inicio -->
+        <a href="{% if current_user.is_authenticated %}{{ url_for('public.docente_panel') }}{% else %}{{ url_for('public.home') }}{% endif %}" class="docente-sidebar-link" title="Inicio">
+            <div class="docente-sidebar-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6 text-white">
+                    <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
+                    <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v4.5a.75.75 0 01-.75.75H5.625c-1.036 0-1.875-.84-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+                </svg>
+            </div>
+            <span>Inicio</span>
+        </a>
+
+        <!-- Buscar -->
+        <a href="{{ url_for('public.buscar_alumno') }}" class="docente-sidebar-link" title="Buscar">
+            <div class="docente-sidebar-icon-box" style="border: 2px solid white; border-radius: 8px; width: 26px; height: 26px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-white">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+            </div>
+            <span>Buscar</span>
+        </a>
+
+        <!-- Registrar Alumno -->
+        <a href="{{ url_for('public.nuevo_alumno') }}" class="docente-sidebar-link" title="Registrar Alumno">
+            <div class="docente-sidebar-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-white">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5a3 3 0 11-6 0 3 3 0 016 0zM12 14c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5zM21 11h-4m2-2v4" />
+                </svg>
+            </div>
+            <span>Reg. Alumno</span>
+        </a>
+
+        <!-- Registrar Docente -->
+        <a href="{{ url_for('auth.signup') }}" class="docente-sidebar-link" title="Registrar Docente">
+            <div class="docente-sidebar-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-white">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632zM19.5 10.5h3m-1.5-1.5v3" />
+                </svg>
+            </div>
+            <span>Reg. Docente</span>
+        </a>
+
+        {% if current_user.is_authenticated and (current_user.is_admin or current_user.email == 'admin@example.com') %}
+        <button type="button" id="adminGeneralListBtn" class="docente-sidebar-link" title="Listado general" style="background:none; border:none; padding:0; font:inherit; cursor:pointer;">
+            <div class="docente-sidebar-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-white">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.5V5.25A2.25 2.25 0 0012.75 3h-6A2.25 2.25 0 004.5 5.25v14.25M15 19.5A2.25 2.25 0 0112.75 21h-6A2.25 2.25 0 014.5 18.75V5.25M15 19.5a2.25 2.25 0 002.25-2.25V5.25A2.25 2.25 0 0015 3h-1.5M8.25 8.25h3.75M8.25 12h4.5" />
+                </svg>
+            </div>
+            <span>Listado general</span>
+        </button>
+        {% endif %}
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="docente-main-wrapper">
+        <!-- Top Bar Header -->
+        <header class="docente-topbar">
             <div class="docente-user-info">
-                <span class="docente-user-name">{{ docente.nombre }} {{ docente.apellidos }}</span>
-                <span class="docente-user-role">{{ 'Administrador' if docente.is_admin else 'Docente' }}</span>
+                <span class="docente-prof-title">Prof. {{ docente.nombre }} {{ docente.apellidos }}</span>
+                <a href="{{ url_for('auth.logout') }}" class="docente-logout-link" title="Cerrar sesión">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="docente-avatar-svg">
+                        <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="docente-logout-subtext">cerrar sesión</span>
+                </a>
             </div>
-            <a href="{{ url_for('auth.logout') }}" class="docente-logout-btn" title="Cerrar sesión">🚪</a>
-            {% if docente.is_admin %}
-            <a href="{{ url_for('admin.index') }}" class="docente-admin-btn btn-small">Panel Admin</a>
-            {% endif %}
-        </div>
-    </header>
+        </header>
 
-    <!-- Main Content -->
-    <main class="docente-main">
-        <!-- Materias Section -->
-        <section class="docente-section">
-            <h2 class="docente-section-title">📚 Materias Asignadas</h2>
-            {% if materias %}
-            <div class="docente-materias-grid">
-                {% for materia in materias %}
-                <button type="button" class="docente-materia-card" data-materia-id="{{ materia.id }}" data-materia-nombre="{{ materia.nombre }}">
-                    <div class="docente-materia-icon">
-                        {% set icons = {
-                            'Español': '📖', 'Matemáticas': '🔢', 'Ciencias': '🔬', 'Geografía': '🌍',
-                            'Historia': '🏛️', 'Formación Cívica y Ética': '🤝', 'Inglés': '🇬🇧',
-                            'Artes': '🎨', 'Fortalecimiento de Español': '📝', 'Fortalecimiento de Matemáticas': '🧮',
-                            'Tecnología': '💻'
+        <!-- Centered Workspace -->
+        <main class="docente-centered-content">
+            <div class="docente-content-panel">
+                <!-- Materias asignadas Section -->
+                <h2 class="docente-section-title">Materias asignadas</h2>
+                <div class="docente-materias-box">
+                    <div class="docente-materias-flex">
+                        {% set accent_map = {
+                            'Español': 'accent-espanol',
+                            'Matemáticas': 'accent-matematicas',
+                            'Ciencias': 'accent-ciencias',
+                            'Geografía': 'accent-geografia',
+                            'Historia': 'accent-historia',
+                            'Formación Cívica y Ética': 'accent-civica',
+                            'Inglés': 'accent-ingles',
+                            'Artes': 'accent-artes'
                         } %}
-                        {{ icons.get(materia.nombre, '📘') }}
-                    </div>
-                    <h3 class="docente-materia-nombre">{{ materia.nombre }}</h3>
-                    {% if materia.descripcion %}
-                    <p class="docente-materia-desc">{{ materia.descripcion }}</p>
-                    {% endif %}
-                </button>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="docente-empty">
-                <p>No tienes materias asignadas actualmente.</p>
-            </div>
-            {% endif %}
-        </section>
-
-        <!-- Horario Section -->
-        <section class="docente-section">
-            <h2 class="docente-section-title">📅 Horario del Profesor</h2>
-            {% if horarios %}
-            <div class="docente-horario-panel">
-                {% set dias_map = {1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes', 6: 'Sábado', 7: 'Domingo'} %}
-                {% set dias_orden = [1, 2, 3, 4, 5] %}
-
-                {% for dia_num in dias_orden %}
-                {% set dia_nombre = dias_map[dia_num] %}
-                {% set horarios_dia = horarios | selectattr('dia_semana', 'equalto', dia_num) | list %}
-                <div class="docente-horario-dia {% if not horarios_dia %}docente-horario-vacio{% endif %}">
-                    <h4 class="docente-horario-dia-nombre">{{ dia_nombre }}</h4>
-                    <div class="docente-horario-clases">
-                        {% if horarios_dia %}
-                        {% for h in horarios_dia %}
-                        <div class="docente-horario-clase">
-                            <span class="docente-horario-hora">{{ h.hora_inicio.strftime('%H:%M') }} - {{ h.hora_fin.strftime('%H:%M') }}</span>
-                            <span class="docente-horario-mat">{{ h.materia.nombre if h.materia else '—' }}</span>
-                            {% if h.salon %}
-                            <span class="docente-horario-salon">📍 {{ h.salon }}</span>
-                            {% endif %}
-                        </div>
+                        {% if materias %}
+                        {% for materia in materias %}
+                        {% set acc_cls = accent_map.get(materia.nombre, 'accent-default') %}
+                        <button type="button" class="docente-subject-capsule" 
+                                data-materia-id="{{ materia.id }}" 
+                                data-materia-nombre="{{ materia.nombre }}">
+                            <div class="docente-capsule-accent {{ acc_cls }}"></div>
+                            <span class="docente-capsule-name">{{ materia.nombre }}</span>
+                            <div class="docente-capsule-plus-btn">+</div>
+                        </button>
                         {% endfor %}
                         {% else %}
-                        <span class="docente-horario-sin-clases">Sin clases</span>
+                        <span style="color:rgba(255,255,255,0.7); font-size:0.9rem;">No hay materias asignadas actualmente.</span>
                         {% endif %}
                     </div>
                 </div>
-                {% endfor %}
+
+                <!-- Horario del profesor Section -->
+                <h2 class="docente-section-title">Horario del profesor</h2>
+                <div class="docente-horario-white-box">
+                    {% if horarios %}
+                    {% set dias_map = {1: 'Lunes', 2: 'Martes', 3: 'Miércoles', 4: 'Jueves', 5: 'Viernes'} %}
+                    <div class="docente-horario-grid">
+                        {% for dia_num in [1, 2, 3, 4, 5] %}
+                        {% set dia_nombre = dias_map[dia_num] %}
+                        {% set horarios_dia = horarios | selectattr('dia_semana', 'equalto', dia_num) | list %}
+                        <div class="docente-horario-col">
+                            <div class="docente-horario-day">{{ dia_nombre }}</div>
+                            {% if horarios_dia %}
+                            {% for h in horarios_dia %}
+                            <div class="docente-horario-card">
+                                <div class="docente-horario-time">{{ h.hora_inicio.strftime('%H:%M') }} - {{ h.hora_fin.strftime('%H:%M') }}</div>
+                                <div class="docente-horario-mat">{{ h.materia.nombre if h.materia else '—' }}</div>
+                                {% if h.salon %}
+                                <div class="docente-horario-salon">📍 {{ h.salon }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <span style="font-size:0.75rem; color:#94a3b8; font-style:italic;">Sin clases</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="text-align:center; padding:50px 20px; color:#64748b;">
+                        📅 No tienes horario asignado actualmente.
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-            {% else %}
-            <div class="docente-empty">
-                <p>No tienes horario asignado actualmente.</p>
-            </div>
-            {% endif %}
-        </section>
-    </main>
+        </main>
+    </div>
 </div>
 
-<!-- ====== MODAL ====== -->
-<div id="materiaModal" class="modal-overlay" style="display:none;">
-    <div class="modal-card">
-        <div class="modal-header">
-            <span id="modalMateriaIcon" class="modal-icon">📘</span>
-            <h3 id="modalMateriaTitle" class="modal-title">Materia</h3>
-        </div>
-        <div class="modal-body">
-            <p class="modal-desc">Selecciona una opción para esta materia:</p>
-            <div class="modal-actions">
-                <button type="button" class="modal-btn modal-btn-alumnos" id="modalBtnAlumnos">
-                    📋 Lista de alumnos
+<!-- =========================================
+     MODAL POPUP REPLICA WITH SVG ICONS
+     ========================================= -->
+<div id="materiaModalOverlay" class="docente-modal-overlay">
+    <div id="materiaModalCard" class="docente-modal-card">
+        
+        <!-- STEP 1: OPTIONS VIEW (EXACT REPLICA IMAGE 1) -->
+        <div id="modalStepOptions">
+            <h3 id="modalSubjectTitle" class="docente-modal-title">Español</h3>
+            <div class="docente-modal-buttons">
+                <!-- Lista de Alumnos Button with SVG Graduation Cap Icon -->
+                <button type="button" class="docente-pill-btn" id="btnModalAlumnos">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="docente-pill-icon-svg">
+                        <path d="M11.7 2.805a.75.75 0 01.6 0l9.5 4.25a.75.75 0 010 1.37l-9.5 4.25a.75.75 0 01-.6 0l-9.5-4.25a.75.75 0 010-1.37l9.5-4.25z" />
+                        <path d="M4.5 10.25a.75.75 0 00-.75.75v3.6c0 .82.67 1.5 1.5 1.5h1.5a.75.75 0 00.75-.75v-3.6a.75.75 0 00-.75-.75H4.5zM12 14.5a8.23 8.23 0 00-6.19 2.76.75.75 0 00.56 1.24h11.26a.75.75 0 00.56-1.24A8.23 8.23 0 0012 14.5z" />
+                    </svg>
+                    <span>Lista de alumnos</span>
                 </button>
-                <button type="button" class="modal-btn modal-btn-calificaciones" id="modalBtnCalificaciones">
-                    📊 Lista de calificaciones
+
+                <!-- Lista de Calificaciones Button with SVG Document Icon -->
+                <button type="button" class="docente-pill-btn" id="btnModalCalificaciones">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="docente-pill-icon-svg">
+                        <path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5h5.25a.75.75 0 000-1.5H8.25z" clip-rule="evenodd" />
+                        <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z" />
+                    </svg>
+                    <span>Lista de calificaciones</span>
                 </button>
             </div>
+            <div class="docente-modal-footer">
+                <button type="button" class="docente-btn-volver" id="btnModalClose">Volver</button>
+            </div>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="modal-btn-close" id="modalBtnClose">Volver</button>
+
+        <!-- STEP 2A: LISTA DE ALUMNOS TABLE -->
+        <div id="modalStepAlumnos" style="display:none;">
+            <h3 id="titleAlumnosTable" class="docente-modal-title" style="margin-bottom:12px;">Lista de Alumnos</h3>
+            <input type="text" id="searchAlumnosInput" placeholder="🔍 Buscar por nombre..." 
+                   style="padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; width:100%; margin-bottom:12px; box-sizing:border-box;">
+            <div class="docente-table-box">
+                <table class="docente-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre Completo</th>
+                            <th>Grupo</th>
+                            <th>Género</th>
+                            <th>Estatus</th>
+                            <th>Código</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyAlumnos"></tbody>
+                </table>
+            </div>
+            <div class="docente-modal-footer" style="margin-top:16px;">
+                <button type="button" class="docente-btn-volver btn-to-options">Volver</button>
+            </div>
+        </div>
+
+        <!-- STEP 2B: LISTA DE CALIFICACIONES TABLE -->
+        <div id="modalStepCalificaciones" style="display:none;">
+            <h3 id="titleCalificacionesTable" class="docente-modal-title" style="margin-bottom:12px;">Lista de Calificaciones</h3>
+
+            <div id="adminGeneralFilters" style="display:none; margin-bottom:12px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px;">
+                    <input type="text" id="searchCalificacionesInput" placeholder="Buscar por nombre..." style="padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; width:100%; box-sizing:border-box; color:#000000;">
+                    <select id="califGradeFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; width:100%; box-sizing:border-box; color:#000000;">
+                        <option value="">Todos los grados</option>
+                    </select>
+                    <select id="califGroupFilter" style="padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1; width:100%; box-sizing:border-box; color:#000000;">
+                        <option value="">Todos los grupos</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="docente-table-box">
+                <table class="docente-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre Completo</th>
+                            <th>Grupo</th>
+                            <th>Materia(s) y Calificación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyCalificaciones"></tbody>
+                </table>
+            </div>
+            <div class="docente-modal-footer" style="margin-top:16px;">
+                <button type="button" class="docente-btn-volver btn-to-options">Volver</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: EDIT STUDENT FORM -->
+        <div id="modalStepEdit" style="display:none;">
+            <h3 class="docente-modal-title" style="margin-bottom:12px;">Editar Alumno</h3>
+            <form id="formEditStudent">
+                <input type="hidden" id="editId">
+                <input type="hidden" id="editMode" value="student">
+                <div id="studentEditFields" class="edit-form-grid">
+                    <div class="edit-form-group">
+                        <label>Nombre(s)</label>
+                        <input type="text" id="editName" required>
+                    </div>
+                    <div class="edit-form-group">
+                        <label>Apellido Paterno</label>
+                        <input type="text" id="editLastP" required>
+                    </div>
+                    <div class="edit-form-group">
+                        <label>Apellido Materno</label>
+                        <input type="text" id="editLastM">
+                    </div>
+                    <div class="edit-form-group">
+                        <label>Grupo</label>
+                        <select id="editGroup" required></select>
+                    </div>
+                    <div class="edit-form-group">
+                        <label>Género</label>
+                        <select id="editGenero" required>
+                            <option value="M">Masculino (M)</option>
+                            <option value="F">Femenino (F)</option>
+                        </select>
+                    </div>
+                    <div class="edit-form-group">
+                        <label>Estatus</label>
+                        <select id="editStatus" required>
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo (Baja)</option>
+                        </select>
+                    </div>
+                    <div class="edit-form-group full">
+                        <label>Código de Alumno</label>
+                        <input type="text" id="editCodigo" required>
+                    </div>
+                </div>
+                <div class="edit-form-group full" id="gradeFieldsContainer"></div>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+                    <button type="button" class="docente-btn-volver" style="background:#cbd5e1;" id="btnCancelEdit">Cancelar</button>
+                    <button type="submit" id="btnGuardarCalificacion" class="docente-btn-volver" style="background:#2563eb; color:#fff;">Guardar</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<div id="noteModalOverlay" class="docente-note-modal" aria-modal="true" role="dialog">
+    <div class="docente-note-card">
+        <h3 id="noteModalTitle" class="docente-note-title">Anotación del alumno</h3>
+        <textarea id="noteModalTextarea" class="docente-note-textarea" placeholder="Escribe una nota o observación relevante para este alumno..."></textarea>
+        <div class="docente-note-actions">
+            <button type="button" class="docente-btn-volver" id="btnCancelNote" style="background:#cbd5e1; color:#0f172a;">Cancelar</button>
+            <button type="button" class="docente-btn-volver" id="btnSaveNote" style="background:#7c3aed; color:#fff;">Guardar nota</button>
         </div>
     </div>
 </div>
 
 <script>
+const csrfToken = "{{ csrf_token() }}";
+
 document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('materiaModal');
-    const modalTitle = document.getElementById('modalMateriaTitle');
-    const modalIcon = document.getElementById('modalMateriaIcon');
-    const modalClose = document.getElementById('modalBtnClose');
-    const modalBtnAlumnos = document.getElementById('modalBtnAlumnos');
-    const modalBtnCalificaciones = document.getElementById('modalBtnCalificaciones');
+    const overlay = document.getElementById('materiaModalOverlay');
+    const modalCard = document.getElementById('materiaModalCard');
 
-    const materiaIcons = {
-        'Español': '📖', 'Matemáticas': '🔢', 'Ciencias': '🔬', 'Geografía': '🌍',
-        'Historia': '🏛️', 'Formación Cívica y Ética': '🤝', 'Inglés': '🇬🇧',
-        'Artes': '🎨', 'Fortalecimiento de Español': '📝', 'Fortalecimiento de Matemáticas': '🧮',
-        'Tecnología': '💻'
-    };
+    const stepOptions = document.getElementById('modalStepOptions');
+    const stepAlumnos = document.getElementById('modalStepAlumnos');
+    const stepCalificaciones = document.getElementById('modalStepCalificaciones');
+    const stepEdit = document.getElementById('modalStepEdit');
 
-    let currentMateriaId = null;
+    const modalTitle = document.getElementById('modalSubjectTitle');
+    const btnClose = document.getElementById('btnModalClose');
+    const btnAlumnos = document.getElementById('btnModalAlumnos');
+    const btnCalificaciones = document.getElementById('btnModalCalificaciones');
+    const adminGeneralListBtn = document.getElementById('adminGeneralListBtn');
+    const adminGeneralFilters = document.getElementById('adminGeneralFilters');
+    const searchCalificacionesInput = document.getElementById('searchCalificacionesInput');
+    const califGradeFilter = document.getElementById('califGradeFilter');
+    const califGroupFilter = document.getElementById('califGroupFilter');
 
-    // Open modal when clicking a materia card
-    document.querySelectorAll('.docente-materia-card').forEach(function (card) {
+    let currentMateria = { id: null, nombre: '' };
+    let alumnosData = [];
+    let isUserAdmin = {{ 'true' if current_user.is_authenticated and (current_user.is_admin or current_user.email == 'admin@example.com') else 'false' }};
+    let gruposList = [];
+    let selectedStudentForNote = null;
+    let lastReturnStep = 'calificaciones';
+    let adminOverviewMode = false;
+
+    fetch('/api/grupos')
+        .then(r => r.json())
+        .then(d => {
+            gruposList = d;
+            populateAdminFilters();
+        })
+        .catch(e => console.error("Error fetching grupos:", e));
+
+    function populateAdminFilters() {
+        if (!califGradeFilter || !califGroupFilter) return;
+
+        const grados = [...new Set(gruposList.map(g => g.grado))].sort();
+        const grupos = [...new Set(gruposList.map(g => g.grupo))].sort();
+
+        califGradeFilter.innerHTML = '<option value="">Todos los grados</option>' +
+            grados.map(grado => `<option value="${grado}">${grado}°</option>`).join('');
+
+        califGroupFilter.innerHTML = '<option value="">Todos los grupos</option>' +
+            grupos.map(grupo => `<option value="${grupo}">${grupo}</option>`).join('');
+    }
+
+    function setStep(step) {
+        stepOptions.style.display = 'none';
+        stepAlumnos.style.display = 'none';
+        stepCalificaciones.style.display = 'none';
+        stepEdit.style.display = 'none';
+
+        if (step === 'options') {
+            modalCard.classList.remove('wide');
+            stepOptions.style.display = 'block';
+        } else if (step === 'alumnos') {
+            modalCard.classList.add('wide');
+            stepAlumnos.style.display = 'block';
+        } else if (step === 'calificaciones') {
+            modalCard.classList.add('wide');
+            stepCalificaciones.style.display = 'block';
+        } else if (step === 'edit') {
+            modalCard.classList.remove('wide');
+            stepEdit.style.display = 'block';
+        }
+    }
+
+    function closeModal() {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+        adminOverviewMode = false;
+        if (adminGeneralFilters) adminGeneralFilters.style.display = 'none';
+        setTimeout(() => setStep('options'), 200);
+    }
+
+    document.querySelectorAll('.docente-subject-capsule').forEach(card => {
         card.addEventListener('click', function () {
-            const id = this.dataset.materiaId;
-            const nombre = this.dataset.materiaNombre;
-            currentMateriaId = id;
-            modalTitle.textContent = nombre;
-            modalIcon.textContent = materiaIcons[nombre] || '📘';
-            modal.style.display = 'flex';
+            currentMateria.id = this.dataset.materiaId;
+            currentMateria.nombre = this.dataset.materiaNombre;
+            modalTitle.textContent = currentMateria.nombre;
+
+            setStep('options');
+            overlay.classList.add('active');
             document.body.style.overflow = 'hidden';
         });
     });
 
-    // Close modal
-    function closeModal() {
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-        currentMateriaId = null;
+    btnClose.addEventListener('click', closeModal);
+    document.querySelectorAll('.btn-to-options').forEach(b => b.addEventListener('click', () => setStep('options')));
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('active')) closeModal(); });
+
+    function loadMateriaData(cb) {
+        if (!currentMateria.id) return;
+        fetch(`/api/materia/${currentMateria.id}/alumnos`)
+            .then(r => r.json())
+            .then(data => {
+                alumnosData = data.alumnos || [];
+                isUserAdmin = data.is_admin_user || false;
+                if (cb) cb();
+            })
+            .catch(e => {
+                alert("Error al cargar la información.");
+                console.error(e);
+            });
     }
 
-    modalClose.addEventListener('click', closeModal);
+    btnAlumnos.addEventListener('click', function () {
+        document.getElementById('titleAlumnosTable').textContent = `Alumnos — ${currentMateria.nombre}`;
+        loadMateriaData(() => {
+            renderAlumnos(alumnosData);
+            setStep('alumnos');
+        });
+    });
 
-    // Close on overlay click
-    modal.addEventListener('click', function (e) {
-        if (e.target === modal) {
-            closeModal();
+    function renderAlumnos(list) {
+        const tbody = document.getElementById('tbodyAlumnos');
+        tbody.innerHTML = '';
+
+        if (!list.length) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:15px; color:#64748b;">No hay alumnos registrados.</td></tr>`;
+            return;
+        }
+
+        list.forEach(a => {
+            const tr = document.createElement('tr');
+            const stBadge = a.status 
+                ? `<span class="docente-badge badge-act">Activo</span>`
+                : `<span class="docente-badge badge-ina">Inactivo</span>`;
+
+            tr.innerHTML = `
+                <td><strong>${a.full_name}</strong></td>
+                <td>${a.grupo_text}</td>
+                <td>${a.genero}</td>
+                <td>${stBadge}</td>
+                <td><code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:700;">${a.codigo}</code></td>
+                <td>
+                    <button type="button" class="docente-btn-act btn-edit" data-id="${a.id}">Editar</button>
+                    <button type="button" class="docente-btn-act btn-del" data-id="${a.id}">Eliminar</button>
+                </td>
+            `;
+
+            tr.querySelector('.btn-edit').addEventListener('click', () => openEditForm(a));
+            tr.querySelector('.btn-del').addEventListener('click', () => deleteLogical(a));
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById('searchAlumnosInput').addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        const filt = alumnosData.filter(a => a.full_name.toLowerCase().includes(q) || a.codigo.toLowerCase().includes(q));
+        renderAlumnos(filt);
+    });
+
+    btnCalificaciones.addEventListener('click', function () {
+        adminOverviewMode = false;
+        if (adminGeneralFilters) adminGeneralFilters.style.display = 'none';
+        document.getElementById('titleCalificacionesTable').textContent = `Calificaciones — ${currentMateria.nombre}`;
+        loadMateriaData(() => {
+            renderCalificaciones(alumnosData);
+            setStep('calificaciones');
+        });
+    });
+
+    if (adminGeneralListBtn) {
+        adminGeneralListBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!isUserAdmin) {
+                console.warn('Intento de acceso al listado general sin permisos de admin.');
+                return;
+            }
+            adminOverviewMode = true;
+            if (adminGeneralFilters) adminGeneralFilters.style.display = 'block';
+            document.getElementById('titleCalificacionesTable').textContent = 'Listado general de alumnos';
+
+            fetch('/api/admin/alumnos')
+                .then(r => r.json())
+                .then(data => {
+                    alumnosData = data.alumnos || [];
+                    isUserAdmin = data.is_admin_user || false;
+                    renderCalificaciones(alumnosData);
+                    setStep('calificaciones');
+                    overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                })
+                .catch(e => {
+                    console.error('Error cargando listado general:', e);
+                    alert('No se pudo cargar el listado general.');
+                });
+        });
+    }
+
+    function applyCalificacionesFilters() {
+        if (!adminOverviewMode || !isUserAdmin) return;
+
+        const nombre = (searchCalificacionesInput?.value || '').trim().toLowerCase();
+        const grado = califGradeFilter?.value || '';
+        const grupo = califGroupFilter?.value || '';
+
+        const filtered = alumnosData.filter(a => {
+            const aNombre = (a.full_name || '').toLowerCase();
+            const aGrado = (a.grupo_text || '').split('°')[0].trim();
+            const aGrupo = (a.grupo_text || '').split('°')[1]?.trim() || (a.grupo_text || '').trim().split(' ').pop();
+
+            const matchesNombre = !nombre || aNombre.includes(nombre);
+            const matchesGrado = !grado || String(aGrado) === String(grado);
+            const matchesGrupo = !grupo || String(aGrupo).toLowerCase() === String(grupo).toLowerCase();
+            return matchesNombre && matchesGrado && matchesGrupo;
+        });
+
+        renderCalificaciones(filtered);
+    }
+
+    if (searchCalificacionesInput) {
+        searchCalificacionesInput.addEventListener('input', applyCalificacionesFilters);
+    }
+    if (califGradeFilter) {
+        califGradeFilter.addEventListener('change', applyCalificacionesFilters);
+    }
+    if (califGroupFilter) {
+        califGroupFilter.addEventListener('change', applyCalificacionesFilters);
+    }
+
+    function renderCalificaciones(list) {
+        const tbody = document.getElementById('tbodyCalificaciones');
+        tbody.innerHTML = '';
+
+        if (!list.length) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:15px; color:#64748b;">No hay registro de calificaciones.</td></tr>`;
+            return;
+        }
+
+        list.forEach(a => {
+            const tr = document.createElement('tr');
+            let califHtml = '';
+
+            if (adminOverviewMode && isUserAdmin) {
+                const pills = Object.entries(a.todas_calificaciones || {}).map(([m, val]) => {
+                    const v = (val !== null && val !== undefined) ? val : '—';
+                    return `<span style="display:inline-block; background:#e2e8f0; padding:2px 6px; border-radius:10px; font-size:0.72rem; margin:1px;">
+                        <strong>${m}:</strong> ${v}
+                    </span>`;
+                }).join(' ');
+                califHtml = pills || 'Sin datos';
+            } else {
+                const v = (a.calificacion_materia !== null && a.calificacion_materia !== undefined) ? a.calificacion_materia : '—';
+                califHtml = `<span style="background:#dbeafe; color:#1e40af; padding:3px 10px; border-radius:12px; font-weight:700;">
+                    ${currentMateria.nombre}: ${v}
+                </span>`;
+            }
+
+            const notaTexto = (a.nota_texto && a.nota_texto.trim()) ? a.nota_texto : 'Sin anotación';
+            tr.innerHTML = `
+                <td><strong>${a.full_name}</strong></td>
+                <td>${a.grupo_text}</td>
+                <td>
+                    ${califHtml}
+                    <div class="nota-pill">Nota: ${notaTexto}</div>
+                </td>
+                <td>
+                    <button type="button" class="docente-btn-act btn-grade-edit" data-id="${a.id}">Editar</button>
+                    <button type="button" class="docente-btn-act btn-nota" data-id="${a.id}">Notas</button>
+                </td>
+            `;
+
+            tr.querySelector('.btn-grade-edit').addEventListener('click', () => openGradeOnlyEdit(a));
+            tr.querySelector('.btn-nota').addEventListener('click', () => openNotesModal(a));
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openGradeOnlyEdit(alumno) {
+        lastReturnStep = 'calificaciones';
+        document.getElementById('editMode').value = 'grade';
+        document.getElementById('studentEditFields').style.display = 'none';
+        document.getElementById('editId').value = alumno.id;
+        document.getElementById('gradeFieldsContainer').innerHTML = `
+            <label style="font-size:0.82rem; font-weight:700; color:#1e40af; display:block; margin-bottom:8px;">Calificación — ${currentMateria.nombre}</label>
+            <input type="number" step="0.1" min="0" max="10" id="singleGradeInp" value="${(alumno.calificacion_materia !== null && alumno.calificacion_materia !== undefined) ? alumno.calificacion_materia : ''}" placeholder="Ej. 9.5" style="width:100%; box-sizing:border-box; color:#000000;">
+        `;
+        setStep('edit');
+    }
+
+    function openNotesModal(alumno) {
+        selectedStudentForNote = alumno;
+        const noteModal = document.getElementById('noteModalOverlay');
+        const title = document.getElementById('noteModalTitle');
+        const textarea = document.getElementById('noteModalTextarea');
+        title.textContent = `Anotación para ${alumno.full_name}`;
+        textarea.value = (alumno.nota_texto || '').trim();
+        noteModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => textarea.focus(), 50);
+    }
+
+    document.getElementById('noteModalOverlay').addEventListener('click', function (e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+            document.body.style.overflow = '';
+            selectedStudentForNote = null;
         }
     });
 
-    // Close on Escape key
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
-            closeModal();
-        }
+    document.getElementById('btnCancelNote').addEventListener('click', function () {
+        document.getElementById('noteModalOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+        selectedStudentForNote = null;
     });
 
-    // Modal action buttons
-    modalBtnAlumnos.addEventListener('click', function () {
-        if (currentMateriaId) {
-            alert('📋 Vista de alumnos por materia — próximamente.');
+    function saveNoteRecord() {
+        if (!selectedStudentForNote) return;
+        const text = document.getElementById('noteModalTextarea').value.trim();
+        fetch(`/api/alumno/${selectedStudentForNote.id}/nota`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ texto: text })
+        })
+        .then(async (r) => {
+            const payload = await r.json().catch(() => ({}));
+            if (!r.ok) {
+                throw new Error(payload.error || 'No se pudo guardar la nota.');
+            }
+            return payload;
+        })
+        .then(res => {
+            if (res.success) {
+                const alumno = alumnosData.find(a => a.id === selectedStudentForNote.id);
+                if (alumno) {
+                    alumno.nota_texto = res.texto || '';
+                }
+                document.getElementById('noteModalOverlay').classList.remove('active');
+                document.body.style.overflow = '';
+                renderCalificaciones(alumnosData);
+                selectedStudentForNote = null;
+            }
+        })
+        .catch(err => {
+            console.error('Error guardando la nota:', err);
+            alert(err.message || 'No se pudo guardar la nota.');
+        });
+    }
+
+    document.getElementById('btnSaveNote').addEventListener('click', saveNoteRecord);
+
+    function deleteLogical(alumno) {
+        if (!confirm(`¿Dar de baja al alumno "${alumno.full_name}"?`)) return;
+        fetch(`/api/alumno/${alumno.id}/baja_logica`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-CSRFToken': csrfToken }
+        })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    alumno.status = false;
+                    renderAlumnos(alumnosData);
+                }
+            })
+            .catch(e => console.error(e));
+    }
+
+    function openEditForm(alumno) {
+        lastReturnStep = 'alumnos';
+        document.getElementById('editMode').value = 'student';
+        document.getElementById('studentEditFields').style.display = 'grid';
+        document.getElementById('editId').value = alumno.id;
+        document.getElementById('editName').value = alumno.nombre;
+        document.getElementById('editLastP').value = alumno.lastname_p;
+        document.getElementById('editLastM').value = alumno.lastname_m || '';
+        document.getElementById('editGenero').value = alumno.genero || 'M';
+        document.getElementById('editStatus').value = alumno.status ? 'true' : 'false';
+        document.getElementById('editCodigo').value = alumno.codigo || '';
+
+        const selGroup = document.getElementById('editGroup');
+        selGroup.innerHTML = '';
+        gruposList.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = g.nombre;
+            if (g.id === alumno.group_id) opt.selected = true;
+            selGroup.appendChild(opt);
+        });
+
+        const container = document.getElementById('gradeFieldsContainer');
+        container.innerHTML = '';
+
+        if (isUserAdmin && alumno.todas_calificaciones) {
+            container.innerHTML = `<label style="font-size:0.82rem; font-weight:700; color:#1e40af; margin-bottom:6px; display:block;">Calificaciones (Todas las materias)</label>`;
+            const grid = document.createElement('div');
+            grid.style.display = 'grid';
+            grid.style.gridTemplateColumns = '1fr 1fr';
+            grid.style.gap = '6px';
+
+            Object.entries(alumno.todas_calificaciones).forEach(([mName, mVal]) => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label style="font-size:0.72rem; color:#475569;">${mName}</label>
+                    <input type="number" step="0.1" min="0" max="10" class="inp-admin-grade" data-materia="${mName}" 
+                           value="${mVal !== null && mVal !== undefined ? mVal : ''}">
+                `;
+                grid.appendChild(div);
+            });
+            container.appendChild(grid);
+        } else {
+            const v = (a => (a !== null && a !== undefined) ? a : '')(alumno.calificacion_materia);
+            container.innerHTML = `
+                <label style="font-size:0.82rem; font-weight:700; color:#1e40af;">Calificación — ${currentMateria.nombre}</label>
+                <input type="number" step="0.1" min="0" max="10" id="singleGradeInp" value="${v}" placeholder="Ej. 9.5">
+            `;
         }
+
+        setStep('edit');
+    }
+
+    document.getElementById('btnCancelEdit').addEventListener('click', () => {
+        document.getElementById('editMode').value = 'student';
+        document.getElementById('studentEditFields').style.display = 'grid';
+        setStep(lastReturnStep);
     });
 
-    modalBtnCalificaciones.addEventListener('click', function () {
-        if (currentMateriaId) {
-            alert('📊 Vista de calificaciones por materia — próximamente.');
+    function saveGradeRecord() {
+        const id = document.getElementById('editId').value;
+        const mode = document.getElementById('editMode').value;
+        const payload = {};
+
+        if (mode === 'student') {
+            payload.name = document.getElementById('editName').value;
+            payload.lastname_p = document.getElementById('editLastP').value;
+            payload.lastname_m = document.getElementById('editLastM').value;
+            payload.group_id = document.getElementById('editGroup').value;
+            payload.genero = document.getElementById('editGenero').value;
+            payload.status = document.getElementById('editStatus').value === 'true';
+            payload.codigo = document.getElementById('editCodigo').value;
         }
+
+        if (isUserAdmin && mode === 'student') {
+            payload.todas_calificaciones = {};
+            document.querySelectorAll('.inp-admin-grade').forEach(inp => {
+                payload.todas_calificaciones[inp.dataset.materia] = inp.value;
+            });
+        } else {
+            payload.materia_nombre = currentMateria.nombre;
+            payload.calificacion = document.getElementById('singleGradeInp').value;
+        }
+
+        fetch(`/api/alumno/${id}/update_docente`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(async (r) => {
+            const response = await r.json().catch(() => ({}));
+            if (!r.ok) {
+                throw new Error(response.error || 'No se pudo guardar la calificación.');
+            }
+            return response;
+        })
+        .then(res => {
+            if (res.success) {
+                loadMateriaData(() => {
+                    renderCalificaciones(alumnosData);
+                    setStep(lastReturnStep);
+                });
+            }
+        })
+        .catch(e => {
+            console.error('Error guardando la calificación:', e);
+            alert(e.message || 'No se pudo guardar la calificación.');
+        });
+    }
+
+    document.getElementById('formEditStudent').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveGradeRecord();
+    });
+
+    document.getElementById('btnGuardarCalificacion').addEventListener('click', function (e) {
+        e.preventDefault();
+        saveGradeRecord();
     });
 });
 </script>
