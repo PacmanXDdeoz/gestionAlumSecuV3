@@ -1,0 +1,79 @@
+{% extends "admin_base.html" %}
+{% block title %}{% if horario %}Editar{% else %}Nueva{% endif %} Entrada de Horario{% endblock %}
+
+{% block content %}
+<div class="admin-form-container">
+    <div class="admin-form-card">
+        <h2>{% if horario %}Editar{% else %}Nueva{% endif %} Entrada de Horario</h2>
+
+        <form action="" method="post" novalidate class="admin-form">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.docente_id.label }}
+                {{ form.docente_id() }}
+                {% for error in form.docente_id.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.materia_id.label }}
+                {{ form.materia_id() }}
+                {% for error in form.materia_id.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.grupo_id.label }}
+                {{ form.grupo_id() }}
+                {% for error in form.grupo_id.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.dia_semana.label }}
+                {{ form.dia_semana() }}
+                {% for error in form.dia_semana.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.hora_inicio.label }}
+                    {{ form.hora_inicio() }}
+                    {% for error in form.hora_inicio.errors %}
+                    <span class="form-errors">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.hora_fin.label }}
+                    {{ form.hora_fin() }}
+                    {% for error in form.hora_fin.errors %}
+                    <span class="form-errors">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <span class="text-muted">Las horas se eligen con el selector de reloj.
+                El sistema impide que un docente tenga dos clases a la vez en el mismo día.</span>
+
+            <div class="form-group">
+                {{ form.salon.label }}
+                {{ form.salon(placeholder="Ej. A1") }}
+                {% for error in form.salon.errors %}
+                <span class="form-errors">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin.list_horarios') }}" class="btn btn-back">Cancelar</a>
+                {{ form.submit(class_='btn btn-warning') }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

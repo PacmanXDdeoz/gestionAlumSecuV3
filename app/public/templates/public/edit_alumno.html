@@ -1,113 +1,122 @@
-{% extends 'base_template.html' %}
+{% extends "base.html" %}
 {% block title %}Editar alumno{% endblock %}
 
+{% block head_extra %}
+<style>
+    .input-form {
+        width: 100%;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        color: #0f172a;
+        box-sizing: border-box;
+        outline: none;
+    }
+    .input-form:focus { box-shadow: 0 0 0 2px #38bdf8; }
+    .edit-form label { font-weight: 600; color: #334155; font-size: 0.85rem; }
+</style>
+{% endblock %}
+
+{% block main_class %}flex-grow px-6 py-8 md:py-12 max-w-4xl mx-auto w-full{% endblock %}
+
 {% block content %}
-<header class="header-calificaciones">
-    <div class="logo-escuela">
-        <img src="{{ url_for('static', filename='images/image_1.png') }}" alt="Logo Escuela">
-    </div>
-    <div class="auth-actions">
-        <a href="{{ url_for('public.docente_panel') }}" class="btn-auth">Volver al panel</a>
-    </div>
-</header>
+<div class="bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-slate-200 text-slate-900">
+    <h2 class="text-slate-900 text-2xl font-bold text-center mb-6">Editar alumno</h2>
 
-<main class="main-calificaciones">
-    <section class="boleta-container">
-        <div class="boleta-card">
-            <h2 class="text-center mb-20">Editar alumno</h2>
-            <form method="post" class="form-edicion-alumno">
-                {{ form.hidden_tag() }}
-                <div class="grid-form">
-                    <div>
-                        <label>Nombre</label>
-                        {{ form.name(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Apellido paterno</label>
-                        {{ form.lastname_p(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Apellido materno</label>
-                        {{ form.lastname_m(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Género</label>
-                        {{ form.genero(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Grupo</label>
-                        {{ form.group_id(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Código</label>
-                        {{ form.password(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Activo</label>
-                        {{ form.status() }}
-                    </div>
-                </div>
+    <form method="post" class="edit-form">
+        {{ form.hidden_tag() }}
 
-                <h3 class="section-title">Calificaciones</h3>
-                <div class="grid-form">
-                    <div>
-                        <label>Español</label>
-                        {{ form.español(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Matemáticas</label>
-                        {{ form.matematicas(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Ciencias</label>
-                        {{ form.ciencias(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Geografía</label>
-                        {{ form.geografia(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Historia</label>
-                        {{ form.historia(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Formación Cívica</label>
-                        {{ form.f_civica(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Inglés</label>
-                        {{ form.ingles(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Artes</label>
-                        {{ form.artes(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Fortalecimiento Español</label>
-                        {{ form.f_español(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Fortalecimiento Matemáticas</label>
-                        {{ form.f_matematicas(class_='input-form') }}
-                    </div>
-                    <div>
-                        <label>Tecnología</label>
-                        {{ form.tecnologia(class_='input-form') }}
-                    </div>
-                </div>
-
-                {% if alumno.codigo_qr %}
-                <div class="qr-display">
-                    <p><strong>Código QR</strong></p>
-                    <img src="{{ url_for('static', filename=alumno.codigo_qr) }}" alt="QR del alumno" class="qr-image">
-                </div>
-                {% endif %}
-
-                <div class="form-actions-center">
-                    {{ form.submit(class_='btn') }}
-                </div>
-            </form>
+        <h3 class="font-bold text-slate-700 mb-3">Datos del alumno</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label>Nombre</label>
+                {{ form.name(class_='input-form') }}
+            </div>
+            <div>
+                <label>Apellido paterno</label>
+                {{ form.lastname_p(class_='input-form') }}
+            </div>
+            <div>
+                <label>Apellido materno</label>
+                {{ form.lastname_m(class_='input-form') }}
+            </div>
+            <div>
+                <label>Género</label>
+                {{ form.genero(class_='input-form') }}
+            </div>
+            <div>
+                <label>Grupo</label>
+                {{ form.group_id(class_='input-form') }}
+            </div>
+            <div>
+                <label>Código</label>
+                {{ form.password(class_='input-form') }}
+            </div>
+            <div class="flex items-center gap-2">
+                {{ form.status(class_='w-4 h-4') }}
+                <label class="mb-0">Activo</label>
+            </div>
         </div>
-    </section>
-</main>
+
+        <h3 class="font-bold text-slate-700 mt-6 mb-3">Calificaciones</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label>Español</label>
+                {{ form.español(class_='input-form') }}
+            </div>
+            <div>
+                <label>Matemáticas</label>
+                {{ form.matematicas(class_='input-form') }}
+            </div>
+            <div>
+                <label>Ciencias</label>
+                {{ form.ciencias(class_='input-form') }}
+            </div>
+            <div>
+                <label>Geografía</label>
+                {{ form.geografia(class_='input-form') }}
+            </div>
+            <div>
+                <label>Historia</label>
+                {{ form.historia(class_='input-form') }}
+            </div>
+            <div>
+                <label>Formación Cívica</label>
+                {{ form.f_civica(class_='input-form') }}
+            </div>
+            <div>
+                <label>Inglés</label>
+                {{ form.ingles(class_='input-form') }}
+            </div>
+            <div>
+                <label>Artes</label>
+                {{ form.artes(class_='input-form') }}
+            </div>
+            <div>
+                <label>Fortalecimiento Español</label>
+                {{ form.f_español(class_='input-form') }}
+            </div>
+            <div>
+                <label>Fortalecimiento Matemáticas</label>
+                {{ form.f_matematicas(class_='input-form') }}
+            </div>
+            <div>
+                <label>Tecnología</label>
+                {{ form.tecnologia(class_='input-form') }}
+            </div>
+        </div>
+
+        {% if alumno.codigo_qr %}
+        <div class="mt-6 text-center">
+            <p class="font-bold text-slate-700 mb-2">Código QR</p>
+            <img src="{{ url_for('public.servir_qr', filename=alumno.codigo_qr) }}" alt="QR del alumno" class="w-16 h-16 object-contain mx-auto">
+        </div>
+        {% endif %}
+
+        <div class="mt-6 flex justify-center">
+            {{ form.submit(class_='bg-[#54d2f8] text-slate-950 px-8 py-2.5 rounded-full font-bold text-sm hover:bg-[#3ec3ea] transition duration-200 shadow cursor-pointer border-none') }}
+        </div>
+    </form>
+</div>
 {% endblock %}

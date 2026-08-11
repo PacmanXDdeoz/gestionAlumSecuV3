@@ -2,7 +2,7 @@ import logging
 import os
 from logging.handlers import SMTPHandler
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -47,6 +47,12 @@ def create_app(settings_module=None):
     from .public import public_bp
     app.register_blueprint(public_bp)
 
+    # ── Comandos personalizados de Flask CLI ────────────────────────────
+    from . import cli
+    app.cli.add_command(cli.seed_command)
+    app.cli.add_command(cli.regenerate_qrs_command)
+    app.cli.add_command(cli.reset_password_command)
+
     # ── Custom Jinja2 filters ──────────────────────────────────────
     @app.template_filter('grade_color')
     def grade_color_filter(nota):
@@ -71,6 +77,9 @@ def create_app(settings_module=None):
     # Custom error handlers
     register_error_handlers(app)
 
+    # Cabeceras de seguridad HTTP
+    register_security_headers(app)
+
     return app
 
 
@@ -87,6 +96,47 @@ def register_error_handlers(app):
     @app.errorhandler(401)
     def error_404_handler(e):
         return render_template('401.html'), 401
+
+
+def register_security_headers(app):
+    """Cabeceras de seguridad HTTP (Fase 1 — pilar 4).
+
+    CSP laxo y deliberadamente compatible con el diseño actual: la app usa
+    Tailwind CDN y estilos/scripts inline, así que se permiten
+    ``'unsafe-inline'`` y el dominio del CDN. Si algún día se sirven assets
+    propios (bundling) se puede endurecer quitando el CDN e ``'unsafe-inline'``.
+
+    ``Strict-Transport-Security`` solo se envía sobre HTTPS: en la LAN de
+    pruebas (http://192.168.x.x) un HSTS activo rompería el acceso.
+    """
+
+    @app.after_request
+    def add_security_headers(response):
+        # Anti-clickjacking (defensa en dos capas: cabecera clásica + CSP3)
+        response.headers.setdefault('X-Frame-Options', 'DENY')
+        # Evita el MIME-sniffing de respuestas no HTML
+        response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        # Privacidad del referrer entre orígenes
+        response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+        # CSP laxo compatible con Tailwind CDN + inline
+        response.headers.setdefault(
+            'Content-Security-Policy',
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: blob:; "
+            "font-src 'self' data:; "
+            "connect-src 'self'; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "frame-ancestors 'none'"
+        )
+        if request.is_secure:
+            response.headers.setdefault(
+                'Strict-Transport-Security',
+                'max-age=31536000; includeSubDomains',
+            )
+        return response
 
 
 def configure_logging(app):

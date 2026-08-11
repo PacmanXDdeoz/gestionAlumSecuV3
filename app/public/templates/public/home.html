@@ -1,110 +1,44 @@
-{% extends "base_template.html" %}
+{% extends "base.html" %}
 {% block title %}Inicio - Sistema de Gestión Escolar{% endblock %}
 
+{# El footer se oculta solo en la landing #}
+{% block head_extra %}<style>footer { display: none !important; }</style>{% endblock %}
+
+{% block main_class %}flex-grow flex flex-col justify-center items-center px-6 py-12 md:py-16 gap-8{% endblock %}
+
 {% block content %}
-<style>
-    /* Hide the default footer just for the landing page */
-    footer {
-        display: none !important;
-    }
-</style>
+<h1 class="text-4xl md:text-5xl font-semibold tracking-wide text-center text-white mb-4">
+    Bienvenido/a!
+</h1>
 
-<div class="flex min-h-screen text-white font-sans">
-    <!-- Sidebar Izquierda -->
-    <aside class="w-20 md:w-24 bg-[#4292d6] flex flex-col items-center py-8 gap-8 z-20 flex-shrink-0 shadow-lg">
-        <!-- Botón Inicio -->
-        <a href="{% if current_user.is_authenticated %}{{ url_for('public.docente_panel') }}{% else %}{{ url_for('public.home') }}{% endif %}" 
-           class="flex flex-col items-center gap-1.5 text-white hover:text-sky-100 transition duration-200 group"
-           title="Inicio">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-7 h-7 text-white group-hover:scale-105 transition-transform duration-200">
-                <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
-                <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v4.5a.75.75 0 01-.75.75H5.625c-1.036 0-1.875-.84-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+<!-- Contenedor de Tarjetas -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-12 max-w-2xl w-full px-4 justify-items-center">
+    <!-- Tarjeta: Alumno/a o Tutor -->
+    <a href="{{ url_for('public.buscar_alumno') }}"
+       class="bg-white rounded-2xl p-6 md:p-8 flex flex-col items-center justify-between text-center w-full max-w-[17.5rem] aspect-square shadow-[0.375rem_0.375rem_0px_rgba(0,0,0,0.3)] border border-slate-200 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.25rem_0.25rem_0px_rgba(0,0,0,0.3)] transition-all duration-200 group">
+        <div class="text-slate-900 text-lg md:text-xl font-medium leading-snug group-hover:text-sky-600 transition-colors duration-200">
+            Soy un alumno/a<br>o tutor
+        </div>
+        <div class="mt-4 flex items-center justify-center flex-grow">
+            <!-- Icono Gorro de Graduación + Estudiante -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="w-16 h-16 md:w-20 md:h-20 text-slate-950 group-hover:scale-105 transition-transform duration-200">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.6144 7.19994c.3479.48981.5999 1.15357.5999 1.80006 0 1.6569-1.3432 3-3 3-1.6569 0-3.00004-1.3431-3.00004-3 0-.67539.22319-1.29865.59983-1.80006M6.21426 6v4m0-4 6.00004-3 6 3-6 2-2.40021-.80006M6.21426 6l3.59983 1.19994M6.21426 19.8013v-2.1525c0-1.6825 1.27251-3.3075 2.95093-3.6488l3.04911 2.9345 3-2.9441c1.7026.3193 3 1.9596 3 3.6584v2.1525c0 .6312-.5373 1.1429-1.2 1.1429H7.41426c-.66274 0-1.2-.5117-1.2-1.1429Z"/>
             </svg>
-            <span class="text-xs font-semibold tracking-wide">Inicio</span>
-        </a>
+        </div>
+    </a>
 
-        <!-- Botón Buscar -->
-        <a href="{{ url_for('public.buscar_alumno') }}" 
-           class="flex flex-col items-center gap-1.5 text-white hover:text-sky-100 transition duration-200 group"
-           title="Buscar">
-            <div class="border-2 border-white rounded-lg p-1 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-white">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-            </div>
-            <span class="text-xs font-semibold tracking-wide">Buscar</span>
-        </a>
-    </aside>
-
-    <!-- Área Principal (Topbar + Contenido de Bienvenida) -->
-    <div class="flex-1 flex flex-col min-h-screen">
-        <!-- Topbar / Encabezado -->
-        <header class="h-16 bg-[#3b7db7] flex items-center justify-end px-6 z-10 flex-shrink-0 shadow-md">
-            <!-- Icono de Perfil / Login -->
-            <a href="{{ url_for('auth.login') }}" 
-               class="text-white hover:text-sky-100 transition duration-200 group"
-               title="Iniciar Sesión Docente">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-8 h-8 text-white group-hover:scale-105 transition-transform duration-200">
-                    <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
-                </svg>
-            </a>
-        </header>
-
-        <!-- Contenido Central -->
-        <main class="flex-grow flex flex-col justify-center items-center px-6 py-12 md:py-16 gap-8">
-            <!-- Título de Bienvenida -->
-            <h1 class="text-4xl md:text-5xl font-semibold tracking-wide text-center text-white mb-4">
-                Bienvenido/a!
-            </h1>
-
-            <!-- Contenedor de Tarjetas -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-12 max-w-2xl w-full px-4 justify-items-center">
-                <!-- Tarjeta: Alumno/a o Tutor -->
-                <a href="{{ url_for('public.buscar_alumno') }}" 
-                   class="bg-white rounded-2xl p-6 md:p-8 flex flex-col items-center justify-between text-center w-full max-w-[280px] aspect-square shadow-[6px_6px_0px_rgba(0,0,0,0.3)] border border-slate-200 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[4px_4px_0px_rgba(0,0,0,0.3)] transition-all duration-200 group">
-                    <div class="text-slate-900 text-lg md:text-xl font-medium leading-snug group-hover:text-sky-600 transition-colors duration-200">
-                        Soy un alumno/a<br>o tutor
-                    </div>
-                    <div class="mt-4 flex items-center justify-center flex-grow">
-                        <!-- Icono Gorro de Graduación + Estudiante -->
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor" class="w-16 h-16 md:w-20 md:h-20 text-slate-950 group-hover:scale-105 transition-transform duration-200">
-                            <!-- Gorro -->
-                            <polygon points="32,12 58,22 32,32 6,22" />
-                            <!-- Borla -->
-                            <path d="M54,24 v8 c0,1 0.5,2 1.5,2 s1.5-1 1.5-2 V24" fill="none" stroke="currentColor" stroke-width="2.5" />
-                            <!-- Cabeza -->
-                            <circle cx="32" cy="41" r="6" />
-                            <!-- Torso -->
-                            <path d="M20,54 c0-6,5-8,12-8 s12,2 12,8" />
-                        </svg>
-                    </div>
-                </a>
-
-                <!-- Tarjeta: Profesor -->
-                <a href="{{ url_for('auth.login') }}" 
-                   class="bg-white rounded-2xl p-6 md:p-8 flex flex-col items-center justify-between text-center w-full max-w-[280px] aspect-square shadow-[6px_6px_0px_rgba(0,0,0,0.3)] border border-slate-200 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[4px_4px_0px_rgba(0,0,0,0.3)] transition-all duration-200 group">
-                    <div class="text-slate-900 text-lg md:text-xl font-medium leading-snug group-hover:text-sky-600 transition-colors duration-200">
-                        Soy un profesor
-                    </div>
-                    <div class="mt-4 flex items-center justify-center flex-grow">
-                        <!-- Icono Profesor + Pizarrón -->
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor" class="w-16 h-16 md:w-20 md:h-20 text-slate-950 group-hover:scale-105 transition-transform duration-200">
-                            <!-- Pizarrón -->
-                            <rect x="26" y="14" width="28" height="20" rx="1.5" fill="none" stroke="currentColor" stroke-width="3" />
-                            <!-- Patas del Pizarrón -->
-                            <line x1="33" y1="34" x2="31" y2="44" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-                            <line x1="47" y1="34" x2="49" y2="44" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-                            <!-- Cabeza del Docente -->
-                            <circle cx="16" cy="22" r="4.5" />
-                            <!-- Torso y Piernas del Docente -->
-                            <path d="M16,27.5c-2.5,0-4,1.5-4,4 v11 h3 v-7 h2 v7 h3 v-11c0-2.5-1.5-4-4-4z" />
-                            <!-- Brazo señalando el Pizarrón -->
-                            <path d="M19,30.5 l7,-3" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-                        </svg>
-                    </div>
-                </a>
-            </div>
-        </main>
-    </div>
+    <!-- Tarjeta: Profesor -->
+    <a href="{{ url_for('auth.login') }}"
+       class="bg-white rounded-2xl p-6 md:p-8 flex flex-col items-center justify-between text-center w-full max-w-[17.5rem] aspect-square shadow-[0.375rem_0.375rem_0px_rgba(0,0,0,0.3)] border border-slate-200 hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[0.25rem_0.25rem_0px_rgba(0,0,0,0.3)] transition-all duration-200 group">
+        <div class="text-slate-900 text-lg md:text-xl font-medium leading-snug group-hover:text-sky-600 transition-colors duration-200">
+            Soy un profesor
+        </div>
+        <div class="mt-4 flex items-center justify-center flex-grow">
+            <!-- Icono Profesor + Pizarrón -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" class="w-16 h-16 md:w-20 md:h-20 text-slate-950 group-hover:scale-105 transition-transform duration-200">
+                <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="m7.14284 11 4.99996-6 5 6m-9.99996 0h-3v8H20.1428v-8h-3m-9.99996 0H3.14285l3-4h4.33735l-3.33736 4Zm9.99996 0h4l-3-4h-4.3374l3.3374 4Zm-3 2c0 1.1046-.8954 2-2 2-1.1045 0-2-.8954-2-2s.8955-2 2-2c1.1046 0 2 .8954 2 2Z"/>
+            </svg>
+        </div>
+    </a>
 </div>
 {% endblock %}

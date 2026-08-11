@@ -1,35 +1,18 @@
-import logging
-import secrets
-import string as string_module
-from pathlib import Path
+import datetime
 
-import qrcode
-from flask import render_template, redirect, url_for, abort, flash, request, current_app
+from flask import render_template, redirect, url_for, abort, flash, request
 from flask_login import current_user, login_required
+from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
+
+from app import db
 from app.auth.decorators import admin_required
-from app.auth.models import Docente
-from app.models import Alumno, Grupos, Materia
+from app.auth.models import Docente, ROL_ADMIN_ID
+from app.models import Alumno, Grupos, Horario, Materia, grupos_materias
+from app.utils.codes import generar_codigo
 from . import admin_bp
-from .forms import AlumnoAdminForm, DocenteAdminForm, GrupoForm
-
-logger = logging.getLogger(__name__)
-
-
-def _generar_codigo(longitud=10):
-    """Genera un código alfanumérico aleatorio de 10 caracteres."""
-    alfabeto = string_module.ascii_uppercase + string_module.digits
-    return ''.join(secrets.choice(alfabeto) for _ in range(longitud))
-
-
-def _generar_qr(codigo, alumno_id):
-    """Genera un código QR para el alumno y guarda la ruta."""
-    qr_folder = Path(current_app.static_folder) / 'qrcodes'
-    qr_folder.mkdir(parents=True, exist_ok=True)
-    qr_filename = f'alumno_{alumno_id}.png'
-    qr_path = qr_folder / qr_filename
-    qr_image = qrcode.make(codigo)
-    qr_image.save(qr_path)
-    return f'qrcodes/{qr_filename}'
+from .forms import (AlumnoAdminForm, DocenteAdminForm, GrupoForm,
+                    GrupoMateriasForm, HorarioAdminForm)
 
 
 @admin_bp.route("/admin/")
@@ -57,7 +40,11 @@ def index():
 @admin_required
 def list_alumnos():
     """Lista todos los alumnos con filtro."""
-    alumnos = Alumno.query.order_by(Alumno.id.asc()).all()
+    # selectinload(grupo_info): la plantilla accede a alumno.grupo_info por
+    # fila; sin precargarlo se dispara 1 query por alumno (N+1)
+    alumnos = Alumno.query\
+        .options(selectinload(Alumno.grupo_info))\
+        .order_by(Alumno.id.asc()).all()
     return render_template("admin/alumnos.html", alumnos=alumnos)
 
 
@@ -70,9 +57,9 @@ def create_alumno():
     if form.validate_on_submit():
         # Determinar código
         if form.auto_generar_codigo.data:
-            codigo = _generar_codigo()
+            codigo = generar_codigo()
             while Alumno.query.filter_by(password=codigo).first():
-                codigo = _generar_codigo()
+                codigo = generar_codigo()
         else:
             codigo = form.codigo_manual.data
             if not codigo:
@@ -93,8 +80,8 @@ def create_alumno():
         )
         alumno.save()
 
-        # Generar QR
-        alumno.generate_qr_code(codigo)
+        # Generar QR (codifica la URL absoluta de la boleta del alumno)
+        alumno.generate_qr_code()
 
         flash(f'Alumno {alumno.name} registrado con código {codigo}.', 'success')
         return redirect(url_for('admin.list_alumnos'))
@@ -218,7 +205,7 @@ def edit_docente(docente_id):
 
     if form.validate_on_submit():
         # No permitir que el admin se quite el rol a sí mismo
-        if docente.id == current_user.id and form.rol.data != 'admin':
+        if docente.id == current_user.id and form.rol.data != ROL_ADMIN_ID:
             flash('No puedes cambiarte el rol a ti mismo.', 'error')
             return render_template("admin/docente_form.html", form=form, docente=docente)
 
@@ -290,8 +277,20 @@ def delete_docente(docente_id):
 @admin_required
 def list_grupos():
     """Lista todos los grupos registrados."""
-    grupos = Grupos.query.order_by(Grupos.grado, Grupos.grupo).all()
-    return render_template("admin/grupos.html", grupos=grupos)
+    # selectinload(alumnos): la plantilla usa grupo.alumnos por fila (N+1)
+    grupos = Grupos.query\
+        .options(selectinload(Grupos.alumnos))\
+        .order_by(Grupos.grado, Grupos.grupo).all()
+
+    # Conteo de materias del currículum por grupo en una sola consulta
+    # (antes: grupo.materias.count() por fila = 1 query por grupo)
+    filas = db.session.execute(
+        select(grupos_materias.c.grupo_id, func.count(grupos_materias.c.materia_id))
+        .group_by(grupos_materias.c.grupo_id)
+    ).all()
+    materias_por_grupo = {g_id: total for g_id, total in filas}
+
+    return render_template("admin/grupos.html", grupos=grupos, materias_por_grupo=materias_por_grupo)
 
 
 @admin_bp.route("/admin/grupos/nuevo/", methods=['GET', 'POST'])
@@ -363,3 +362,192 @@ def delete_grupo(grupo_id):
     grupo.delete()
     flash(f'Grupo {grupo.grado}° {grupo.grupo} eliminado.', 'success')
     return redirect(url_for('admin.list_grupos'))
+
+
+@admin_bp.route("/admin/grupos/<int:grupo_id>/materias/", methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_grupo_materias(grupo_id):
+    """Asigna el currículum del grupo: las materias que se imparten en él.
+
+    La boleta de cada alumno del grupo mostrará únicamente estas materias.
+    """
+    grupo = Grupos.query.get_or_404(grupo_id)
+    form = GrupoMateriasForm()
+
+    if request.method == 'GET':
+        form.materias.data = [m.id for m in grupo.materias.all()]
+
+    if form.validate_on_submit():
+        materias_seleccionadas = Materia.query.filter(
+            Materia.id.in_(form.materias.data)
+        ).all() if form.materias.data else []
+        grupo.materias = materias_seleccionadas
+        grupo.save()
+        flash(f'Materias del grupo {grupo.grado}° {grupo.grupo} actualizadas.', 'success')
+        return redirect(url_for('admin.list_grupos'))
+
+    return render_template("admin/grupo_materias.html", form=form, grupo=grupo)
+
+
+# ──────────────────────────────────────────────
+#  HORARIOS (CRUD) — asignación docente ↔ grupo
+# ──────────────────────────────────────────────
+
+def _parse_hora(texto):
+    """Parsea una hora a ``datetime.time`` o lanza ValueError.
+
+    Acepta tanto ``HH:MM`` como ``HH:MM:SS``: el input ``type="time"``
+    del formulario envía ``HH:MM`` por defecto, pero con ciertos ``step``
+    o navegadores puede llegar con segundos.
+    """
+    texto = (texto or '').strip()
+    for fmt in ('%H:%M', '%H:%M:%S'):
+        try:
+            return datetime.datetime.strptime(texto, fmt).time()
+        except ValueError:
+            continue
+    raise ValueError(f'Hora no válida: {texto}')
+
+
+def _horario_solapado(docente_id, dia_semana, hora_inicio, hora_fin, excluir_id=None):
+    """¿El docente ya tiene una clase que se solape con el rango horario?
+
+    Dos bloques se solapan si sus intervalos se cruzan: ``a < fin_b`` y
+    ``b < fin_a``. Al editar se excluye el propio horario (``excluir_id``)
+    para que un docente pueda conservar su clase sin bloquearse a sí mismo.
+    """
+    query = Horario.query.filter(
+        Horario.docente_id == docente_id,
+        Horario.dia_semana == dia_semana,
+        Horario.hora_inicio < hora_fin,
+        Horario.hora_fin > hora_inicio,
+    )
+    if excluir_id is not None:
+        query = query.filter(Horario.id != excluir_id)
+    return query.first() is not None
+
+
+@admin_bp.route("/admin/horarios/")
+@login_required
+@admin_required
+def list_horarios():
+    """Lista las entradas del horario con docente, materia y grupo precargados."""
+    horarios = Horario.query\
+        .options(
+            selectinload(Horario.docente),
+            selectinload(Horario.materia),
+            selectinload(Horario.grupo),
+        )\
+        .order_by(Horario.dia_semana, Horario.hora_inicio)\
+        .all()
+    return render_template("admin/horarios.html", horarios=horarios)
+
+
+@admin_bp.route("/admin/horarios/nuevo/", methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_horario():
+    """Crea una entrada de horario (docente + materia + grupo + día/hora)."""
+    form = HorarioAdminForm()
+    if form.validate_on_submit():
+        try:
+            hora_inicio = _parse_hora(form.hora_inicio.data)
+            hora_fin = _parse_hora(form.hora_fin.data)
+        except ValueError:
+            flash('Formato de hora inválido. Usa HH:MM (ej. 07:30).', 'error')
+            return render_template("admin/horario_form.html", form=form)
+        if hora_fin <= hora_inicio:
+            flash('La hora de fin debe ser posterior a la de inicio.', 'error')
+            return render_template("admin/horario_form.html", form=form)
+
+        # Anti-solapamiento: un docente no puede tener dos clases a la vez
+        # (mismo día y rango horario cruzado).
+        if _horario_solapado(
+            form.docente_id.data, form.dia_semana.data,
+            hora_inicio, hora_fin,
+        ):
+            flash('El docente ya tiene una clase en ese día y horario (se superponen).', 'error')
+            return render_template("admin/horario_form.html", form=form)
+
+        horario = Horario(
+            docente_id=form.docente_id.data,
+            materia_id=form.materia_id.data,
+            grupo_id=form.grupo_id.data or None,  # 0 → sin grupo
+            dia_semana=form.dia_semana.data,
+            hora_inicio=hora_inicio,
+            hora_fin=hora_fin,
+            salon=form.salon.data or None,
+        )
+        horario.save()
+        flash('Entrada de horario creada.', 'success')
+        return redirect(url_for('admin.list_horarios'))
+
+    return render_template("admin/horario_form.html", form=form)
+
+
+@admin_bp.route("/admin/horarios/<int:horario_id>/editar/", methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_horario(horario_id):
+    """Edita una entrada de horario existente."""
+    horario = db.session.get(Horario, horario_id)
+    if horario is None:
+        abort(404)
+
+    form = HorarioAdminForm()
+
+    if request.method == 'GET':
+        form.docente_id.data = horario.docente_id
+        form.materia_id.data = horario.materia_id
+        form.grupo_id.data = horario.grupo_id or 0
+        form.dia_semana.data = horario.dia_semana
+        form.hora_inicio.data = horario.hora_inicio.strftime('%H:%M')
+        form.hora_fin.data = horario.hora_fin.strftime('%H:%M')
+        form.salon.data = horario.salon
+
+    if form.validate_on_submit():
+        try:
+            hora_inicio = _parse_hora(form.hora_inicio.data)
+            hora_fin = _parse_hora(form.hora_fin.data)
+        except ValueError:
+            flash('Formato de hora inválido. Usa HH:MM (ej. 07:30).', 'error')
+            return render_template("admin/horario_form.html", form=form, horario=horario)
+        if hora_fin <= hora_inicio:
+            flash('La hora de fin debe ser posterior a la de inicio.', 'error')
+            return render_template("admin/horario_form.html", form=form, horario=horario)
+
+        # Anti-solapamiento (excluyendo el propio horario): el docente no
+        # puede tener otra clase a la vez en el mismo día.
+        if _horario_solapado(
+            form.docente_id.data, form.dia_semana.data,
+            hora_inicio, hora_fin, excluir_id=horario.id,
+        ):
+            flash('El docente ya tiene una clase en ese día y horario (se superponen).', 'error')
+            return render_template("admin/horario_form.html", form=form, horario=horario)
+
+        horario.docente_id = form.docente_id.data
+        horario.materia_id = form.materia_id.data
+        horario.grupo_id = form.grupo_id.data or None
+        horario.dia_semana = form.dia_semana.data
+        horario.hora_inicio = hora_inicio
+        horario.hora_fin = hora_fin
+        horario.salon = form.salon.data or None
+        horario.save()
+        flash('Entrada de horario actualizada.', 'success')
+        return redirect(url_for('admin.list_horarios'))
+
+    return render_template("admin/horario_form.html", form=form, horario=horario)
+
+
+@admin_bp.route("/admin/horarios/<int:horario_id>/eliminar/", methods=['POST'])
+@login_required
+@admin_required
+def delete_horario(horario_id):
+    """Elimina una entrada de horario."""
+    horario = db.session.get(Horario, horario_id)
+    if horario is None:
+        abort(404)
+    horario.delete()
+    flash('Entrada de horario eliminada.', 'success')
+    return redirect(url_for('admin.list_horarios'))

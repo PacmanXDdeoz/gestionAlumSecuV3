@@ -1,10 +1,8 @@
 import datetime
 
-from slugify import slugify
-from sqlalchemy.exc import IntegrityError, ProgrammingError
+from sqlalchemy.exc import ProgrammingError
 
 from app import db
-from app.auth.models import Docente
 
 
 # ──────────────────────────────────────────────
@@ -14,6 +12,18 @@ materias_docentes = db.Table(
     'materias_docentes',
     db.Model.metadata,
     db.Column('docente_id', db.Integer, db.ForeignKey('alejandra.docentes.id'), primary_key=True),
+    db.Column('materia_id', db.Integer, db.ForeignKey('alejandra.materias.id'), primary_key=True),
+    schema='alejandra'
+)
+
+# ──────────────────────────────────────────────
+#  TABLA DE ASOCIACIÓN: Grupo ↔ Materia
+#  (define el currículum: qué materias se imparten en cada grupo)
+# ──────────────────────────────────────────────
+grupos_materias = db.Table(
+    'grupos_materias',
+    db.Model.metadata,
+    db.Column('grupo_id', db.Integer, db.ForeignKey('alejandra.grupos.id'), primary_key=True),
     db.Column('materia_id', db.Integer, db.ForeignKey('alejandra.materias.id'), primary_key=True),
     schema='alejandra'
 )
@@ -30,6 +40,7 @@ class Materia(db.Model):
 
     # Relaciones
     docentes = db.relationship('Docente', secondary=materias_docentes, back_populates='materias', lazy='dynamic')
+    grupos = db.relationship('Grupos', secondary=grupos_materias, back_populates='materias', lazy='dynamic')
     horarios = db.relationship('Horario', backref='materia', lazy=True)
     calificaciones_materia = db.relationship('CalificacionMateria', backref='materia', lazy=True)
 
@@ -59,23 +70,29 @@ class Materia(db.Model):
     @staticmethod
     def seed_materias():
         """Crea las materias por defecto si no existen."""
-        materias_default = [
-            ('Español', 'Lengua y literatura'),
-            ('Matemáticas', 'Matemáticas'),
-            ('Ciencias', 'Ciencias Naturales'),
-            ('Geografía', 'Geografía'),
-            ('Historia', 'Historia'),
-            ('Formación Cívica y Ética', 'Formación Cívica y Ética'),
-            ('Inglés', 'Inglés'),
-            ('Artes', 'Artes'),
-            ('Fortalecimiento de Español', 'Fortalecimiento de Español'),
-            ('Fortalecimiento de Matemáticas', 'Fortalecimiento de Matemáticas'),
-            ('Tecnología', 'Tecnología'),
-        ]
-        for nombre, desc in materias_default:
+        for nombre, desc in MATERIAS_DEFAULT:
             if not Materia.query.filter_by(nombre=nombre).first():
                 db.session.add(Materia(nombre=nombre, descripcion=desc))
         db.session.commit()
+
+
+# Materias por defecto del plantel (usadas por seed_materias y por la
+# migración de seed). Se mantienen aquí como fuente única para tests.
+MATERIAS_DEFAULT = [
+    ('Español', 'Lengua y literatura'),
+    ('Matemáticas', 'Matemáticas'),
+    ('Biología', 'Biología'),
+    ('Química', 'Química'),
+    ('Física', 'Física'),
+    ('Historia', 'Historia'),
+    ('Formación cívica y Ética', 'Formación cívica y Ética'),
+    ('Geografía', 'Geografía'),
+    ('Inglés', 'Inglés'),
+    ('Artes (música y teatro)', 'Artes: música y teatro'),
+    ('Tecnologías (talleres)', 'Tecnologías: talleres'),
+    ('Fomento a la lectura', 'Fomento a la lectura'),
+    ('Educación Física', 'Educación Física'),
+]
 
 
 class Grupos(db.Model):
@@ -86,6 +103,7 @@ class Grupos(db.Model):
     grupo = db.Column(db.String(1), nullable=False)
 
     alumnos = db.relationship('Alumno', backref='grupo_info', lazy=True)
+    materias = db.relationship('Materia', secondary=grupos_materias, back_populates='grupos', lazy='dynamic')
 
     def __init__(self, grado, grupo):
         self.grado = grado
@@ -118,11 +136,14 @@ class Alumno(db.Model):
     codigo_barras = db.Column(db.String(255), unique=True, nullable=True)
 
     password = db.Column('pass', db.String(10), nullable=False)
+    # Profesor/tutor asignado al alumno (nullable: opcional).
+    tutor_id = db.Column(db.Integer, db.ForeignKey('alejandra.docentes.id'), nullable=True)
 
     calificaciones = db.relationship('Calificacion', backref='alumno', lazy=True)
     anotaciones = db.relationship('AnotacionAlumno', backref='alumno', lazy=True)
+    tutor = db.relationship('Docente', foreign_keys=[tutor_id], backref='alumnos_tutoreados')
 
-    def __init__(self, name, lastname_p, lastname_m, group_id, genero, password, status=True):
+    def __init__(self, name, lastname_p, lastname_m, group_id, genero, password, status=True, tutor_id=None):
         self.name = name
         self.lastname_p = lastname_p
         self.lastname_m = lastname_m
@@ -130,6 +151,7 @@ class Alumno(db.Model):
         self.genero = genero
         self.status = status
         self.password = password
+        self.tutor_id = tutor_id
 
     def __repr__(self):
         return f'<Alumno {self.name} {self.lastname_p}>'
@@ -142,22 +164,60 @@ class Alumno(db.Model):
     def find_by_code(code):
         return Alumno.query.filter_by(password=code).first()
 
+    @staticmethod
+    def find_by_code_or_id(code):
+        """Busca un alumno por código de acceso o, si el valor es numérico, por ID.
+
+        Los códigos QR del sistema no son uniformes: los alumnos creados por
+        las rutas públicas codifican el ID numérico (``str(alumno.id)``),
+        mientras que los creados desde el panel admin codifican el código de
+        acceso (``password``). Este método permite que el escáner QR y el
+        buscador resuelvan ambos casos.
+        """
+        alumno = Alumno.query.filter_by(password=code).first()
+        if alumno is not None:
+            return alumno
+        if code and str(code).isdigit():
+            return db.session.get(Alumno, int(code))
+        return None
+
     def generate_qr_code(self, texto=None):
-        from pathlib import Path
-        import qrcode
-        from flask import current_app
+        from flask import current_app, url_for
+
+        from app.utils.qr import generar_qr, qr_codes_folder
 
         if texto is None:
-            texto = str(self.id)
+            # El QR codifica la URL absoluta de la boleta pública del alumno
+            # (escaneo nativo): al escanear la credencial con la cámara del
+            # celular se abre directamente la vista del alumno, sin necesidad
+            # de librerías JS de escaneo en /buscar/.
+            #
+            # El dominio con el que se guardan los QRs se controla desde
+            # PUBLIC_BASE_URL en .env: si está definido (p. ej.
+            # http://192.168.100.8:5000 en testeo), se usa SIEMPRE, incluso
+            # dentro de un request (es determinista e independiente del host
+            # de la petición). Si está vacío, se usa el host de la petición
+            # (url_for(_external=True)) o, fuera de request (p. ej. el
+            # comando ``flask regenerate-qrs``), se lanza un error.
+            base = current_app.config.get('PUBLIC_BASE_URL', '').strip()
+            if base:
+                texto = f'{base.rstrip("/")}/buscar/{self.id}'
+            else:
+                try:
+                    texto = url_for('public.boleta_alumno', id=self.id, _external=True)
+                except RuntimeError:
+                    raise RuntimeError(
+                        'No hay contexto de request y PUBLIC_BASE_URL no está '
+                        'configurado (defínelo en .env) para generar la URL '
+                        'absoluta del QR.'
+                    )
 
-        qr_folder = Path(current_app.static_folder) / 'qrcodes'
-        qr_folder.mkdir(parents=True, exist_ok=True)
-        qr_filename = f'alumno_{self.id}.png'
-        qr_path = qr_folder / qr_filename
-        qr_image = qrcode.make(texto)
-        qr_image.save(qr_path)
-
-        self.codigo_qr = f'qrcodes/{qr_filename}'
+        # Carpeta de QRs configurable (fuente única: app.utils.qr.qr_codes_folder).
+        # El entorno de testing la redirige a un directorio temporal para que
+        # la suite no escriba PNGs de alumnos de prueba sobre la carpeta real
+        # (parecerían QRs de alumnos ya eliminados de la BD); en producción
+        # usa la carpeta estándar <static>/qrcodes.
+        self.codigo_qr = generar_qr(texto, qr_codes_folder(), f'alumno_{self.id}.png')
         if not self.id:
             db.session.add(self)
         db.session.commit()
@@ -288,7 +348,9 @@ class Horario(db.Model):
     """Horario de clases de un docente.
 
     Cada entrada representa un bloque de clase: un día, una hora,
-    una materia y un salón asignado a un docente específico.
+    una materia, el grupo donde se imparte y un salón, asignados a un
+    docente específico. El grupo (``grupo_id``) es la fuente de verdad
+    para saber qué alumnos corresponden a cada docente.
     """
     __tablename__ = 'horarios'
     __table_args__ = {'schema': 'alejandra'}
@@ -304,19 +366,29 @@ class Horario(db.Model):
         db.ForeignKey('alejandra.materias.id'),
         nullable=False
     )
+    grupo_id = db.Column(
+        db.Integer,
+        db.ForeignKey('alejandra.grupos.id'),
+        nullable=True
+    )
     dia_semana = db.Column(db.Integer, nullable=False)  # 1=Lunes … 7=Domingo
     hora_inicio = db.Column(db.Time, nullable=False)
     hora_fin = db.Column(db.Time, nullable=False)
     salon = db.Column(db.String(20), nullable=True)
 
-    # Relación backref: docente desde Docente, materia desde Materia
-    def __init__(self, docente_id, materia_id, dia_semana, hora_inicio, hora_fin, salon=None):
+    # Relación backref: docente desde Docente, materia desde Materia,
+    # grupo desde Grupos (lazy para evitar N+1 en el panel; precargar con
+    # joinedload(Horario.grupo) en _horarios_de_docente).
+    grupo = db.relationship('Grupos', backref='horarios', lazy=True)
+
+    def __init__(self, docente_id, materia_id, dia_semana, hora_inicio, hora_fin, salon=None, grupo_id=None):
         self.docente_id = docente_id
         self.materia_id = materia_id
         self.dia_semana = dia_semana
         self.hora_inicio = hora_inicio
         self.hora_fin = hora_fin
         self.salon = salon
+        self.grupo_id = grupo_id
 
     def __repr__(self):
         return f'<Horario Docente:{self.docente_id} Dia:{self.dia_semana}>'
@@ -337,6 +409,8 @@ class Horario(db.Model):
             'docente_id': self.docente_id,
             'materia_id': self.materia_id,
             'materia': self.materia.nombre if self.materia else None,
+            'grupo_id': self.grupo_id,
+            'grupo': f"{self.grupo.grado}° {self.grupo.grupo}" if self.grupo else None,
             'dia_semana': self.dia_semana,
             'hora_inicio': self.hora_inicio.strftime('%H:%M') if self.hora_inicio else None,
             'hora_fin': self.hora_fin.strftime('%H:%M') if self.hora_fin else None,
@@ -367,16 +441,20 @@ class CalificacionMateria(db.Model):
     )
     calificacion = db.Column(db.Numeric(5, 2), nullable=True)
     periodo = db.Column(db.String(50), nullable=True)  # ej: "1er Trimestre", "Ordinaria"
+    # Nota/comentario que el docente comparte con el alumno para esta materia.
+    # Una por (alumno, materia): la boleta la muestra junto a la calificación.
+    nota_texto = db.Column(db.Text, nullable=True)
     creado_en = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     # Relaciones
     alumno = db.relationship('Alumno', backref='calificaciones_materia')
 
-    def __init__(self, alumnos_id, materia_id, calificacion=None, periodo=None):
+    def __init__(self, alumnos_id, materia_id, calificacion=None, periodo=None, nota_texto=None):
         self.alumnos_id = alumnos_id
         self.materia_id = materia_id
         self.calificacion = calificacion
         self.periodo = periodo
+        self.nota_texto = nota_texto
 
     def __repr__(self):
         return f'<Calif Alumno:{self.alumnos_id} Mat:{self.materia_id} = {self.calificacion}>'
@@ -397,5 +475,6 @@ class CalificacionMateria(db.Model):
             'materia_id': self.materia_id,
             'materia': self.materia.nombre if self.materia else None,
             'calificacion': float(self.calificacion) if self.calificacion is not None else None,
+            'nota_texto': self.nota_texto,
             'periodo': self.periodo,
         }

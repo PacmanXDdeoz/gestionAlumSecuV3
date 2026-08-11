@@ -1,10 +1,29 @@
-{% extends 'base_template.html' %}
+{% extends "base.html" %}
 {% block title %}Página no encontrada{% endblock %}
+
+{# Las páginas de error NO usan el layout de panel (sidebar/header):
+   solo el contenido centrado + el pie. Cargan admin.css únicamente para
+   los estilos .error-*. #}
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+{% endblock %}
+{% block layout %}
+{{ self.content() }}
+{# Las páginas de error conservan su pie (fuera del panel/sidebar) #}
+<footer>
+    <p>Sistema de Gestión Escolar<span class="footer-credit"> — Prof. Alejandra Vázquez Cruz</span></p>
+</footer>
+{% endblock %}
 
 {% block content %}
 <div class="error-container">
     <div class="error-card">
-        <div class="error-icon">🔍</div>
+        <div class="error-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"
+                 style="width:3.2rem; height:3.2rem; color:#2b6cb0;">
+                <path stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
+            </svg>
+        </div>
         <div class="error-code">404</div>
         <div class="error-message">
             <strong>Página no encontrada</strong><br>

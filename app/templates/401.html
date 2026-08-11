@@ -1,5 +1,19 @@
-{% extends 'base_template.html' %}
+{% extends "base.html" %}
 {% block title %}Acceso denegado{% endblock %}
+
+{# Las páginas de error NO usan el layout de panel (sidebar/header):
+   solo el contenido centrado + el pie. Cargan admin.css únicamente para
+   los estilos .error-*. #}
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+{% endblock %}
+{% block layout %}
+{{ self.content() }}
+{# Las páginas de error conservan su pie (fuera del panel/sidebar) #}
+<footer>
+    <p>Sistema de Gestión Escolar<span class="footer-credit"> — Prof. Alejandra Vázquez Cruz</span></p>
+</footer>
+{% endblock %}
 
 {% block content %}
 <div class="error-container">
@@ -11,7 +25,14 @@
             No tienes permisos para acceder a esta página.<br>
             Inicia sesión con una cuenta con los permisos adecuados.
         </div>
-        <a href="{{ url_for('public.home') }}" class="btn-back-home">Ir al inicio</a>
+        <div class="error-actions">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('public.docente_panel') }}" class="btn-back-home">Ir al panel</a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn-back-home">Iniciar sesión</a>
+            {% endif %}
+            <a href="{{ url_for('public.home') }}" class="btn-back-home">Ir al inicio</a>
+        </div>
     </div>
 </div>
 {% endblock %}

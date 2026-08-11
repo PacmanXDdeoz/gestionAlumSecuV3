@@ -1,0 +1,72 @@
+{% extends "admin_base.html" %}
+{% block title %}Gestionar Horarios{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-content">
+        <div class="admin-page-header">
+            <h2>Gestión de Horarios</h2>
+            <div>
+                <a href="{{ url_for('admin.index') }}" class="btn btn-back btn-small">← Panel</a>
+                <a href="{{ url_for('admin.create_horario') }}" class="btn btn-small btn-warning">+ Nueva Entrada</a>
+            </div>
+        </div>
+
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Docente</th>
+                        <th>Materia</th>
+                        <th>Grupo</th>
+                        <th>Día</th>
+                        <th>Hora</th>
+                        <th>Salón</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in horarios %}
+                    <tr>
+                        <td><strong>{{ h.docente.nombre }} {{ h.docente.apellidos }}</strong></td>
+                        <td>{{ h.materia.nombre if h.materia else '—' }}</td>
+                        <td>
+                            {% if h.grupo %}
+                            <span class="badge badge-docente">{{ h.grupo.grado }}° {{ h.grupo.grupo }}</span>
+                            {% else %}
+                            <span class="text-muted">Sin grupo</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'][h.dia_semana] if 1 <= h.dia_semana <= 7 else h.dia_semana }}</td>
+                        <td>
+                            <strong>{{ h.hora_inicio.strftime('%H:%M') }} – {{ h.hora_fin.strftime('%H:%M') }}</strong>
+                        </td>
+                        <td>{{ h.salon or '—' }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('admin.edit_horario', horario_id=h.id) }}"
+                                    class="btn btn-small btn-warning">Editar</a>
+                                <form method="post"
+                                    action="{{ url_for('admin.delete_horario', horario_id=h.id) }}"
+                                    class="form-actions-inline"
+                                    onsubmit="return confirm('¿Eliminar esta entrada de horario?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-small btn-danger">Eliminar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="empty-row">
+                            No hay horarios registrados todavía. Asigna un horario a cada docente
+                            para que vea únicamente a los alumnos de sus grupos.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "admin_base.html" %}
+{% block title %}Materias de {{ grupo.grado }}° {{ grupo.grupo }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilo scoped para la cuadrícula de materias (sobre el CSS global del
+       admin cargado vía admin_base.html). */
+    .gm-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr));
+        gap: 0.625rem;
+        margin: 1.125rem 0;
+    }
+    .gm-check {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.75rem 0.875rem;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        font-weight: 600;
+        color: #1e293b;
+        transition: background-color 0.15s, border-color 0.15s;
+    }
+    .gm-check:hover {
+        background: #e2e8f0;
+    }
+    .gm-check input {
+        width: 1.125rem;
+        height: 1.125rem;
+        accent-color: #2563eb;
+        flex-shrink: 0;
+    }
+    .gm-hint {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+    .gm-count {
+        font-weight: 700;
+        color: #2563eb;
+    }
+</style>
+
+<div class="admin-form-container">
+    <div class="admin-form-card">
+        <h2>
+            <svg class="nav-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+            Materias de {{ grupo.grado }}° {{ grupo.grupo }}
+        </h2>
+        <p class="gm-hint">
+            Selecciona las materias que se imparten en este grupo. La boleta de
+            cada alumno del grupo mostrará <strong>únicamente</strong> estas materias.
+            Si no seleccionas ninguna, la boleta conservará la vista completa
+            de las 11 materias del currículum.
+        </p>
+
+        <form action="" method="post" novalidate class="admin-form">
+            {{ form.hidden_tag() }}
+
+            <div class="gm-grid">
+                {% for value, label in form.materias.choices %}
+                <label class="gm-check">
+                    <input type="checkbox" name="materias" value="{{ value }}"
+                           {% if value in form.materias.data|map('string')|list %}checked{% endif %}>
+                    <span>{{ label }}</span>
+                </label>
+                {% else %}
+                <p class="gm-hint">No hay materias registradas. Crea materias antes de asignarlas a un grupo.</p>
+                {% endfor %}
+            </div>
+
+            {% for error in form.materias.errors %}
+            <span class="form-errors">{{ error }}</span>
+            {% endfor %}
+
+            <p class="gm-hint">
+                <span id="gmSelectedCount" class="gm-count">0</span> materia(s) seleccionada(s)
+            </p>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin.list_grupos') }}" class="btn btn-back">Cancelar</a>
+                {{ form.submit(class_='btn btn-warning') }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const boxes = document.querySelectorAll('.gm-check input[name="materias"]');
+    const countEl = document.getElementById('gmSelectedCount');
+
+    function updateCount() {
+        countEl.textContent = document.querySelectorAll('.gm-check input[name="materias"]:checked').length;
+    }
+
+    boxes.forEach(box => box.addEventListener('change', updateCount));
+    updateCount();
+});
+</script>
+{% endblock %}

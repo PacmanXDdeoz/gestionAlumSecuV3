@@ -1,0 +1,27 @@
+{# Barra superior. Muestra perfil + cerrar sesión si hay sesión activa;
+   en caso contrario, enlace de inicio de sesión. #}
+<header class="h-16 bg-[#3b7db7] flex items-center justify-end px-6 z-10 flex-shrink-0 shadow-md">
+    <div class="flex items-center gap-4">
+        {% if current_user.is_authenticated %}
+        <span class="text-white text-sm font-bold uppercase tracking-wide hidden sm:inline">
+            Prof. {{ current_user.nombre }} {{ current_user.apellidos }}
+        </span>
+        <a href="{{ url_for('auth.logout') }}"
+           class="text-white hover:text-sky-100 transition duration-200 group text-center"
+           title="Cerrar sesión">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="nav-icon mx-auto text-white group-hover:scale-105 transition-transform duration-200">
+                <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+            </svg>
+            <span class="block text-[0.6rem]">cerrar sesión</span>
+        </a>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}"
+           class="text-white hover:text-sky-100 transition duration-200 group"
+           title="Iniciar Sesión Docente">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="nav-icon text-white group-hover:scale-105 transition-transform duration-200">
+                <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
+            </svg>
+        </a>
+        {% endif %}
+    </div>
+</header>

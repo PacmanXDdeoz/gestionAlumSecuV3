@@ -1,160 +1,55 @@
-{% extends "base_template.html" %}
+{% extends "base.html" %}
 
 {% block title %}Registrar Docente{% endblock %}
 
 {% block content %}
 <style>
     :root {
-        --sidebar-bg: #3572a3;
-        --sidebar-width: 75px;
-        --header-bg: #3b7db7;
         --main-box-bg: #1c3f66;
-        --panel-muted: #2d4f7d;
         --text-soft: #cbd5e1;
     }
 
-    body {
-        margin: 0;
-        background: #0f172a;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    .docente-page-layout {
-        display: flex;
-        min-height: 100vh;
-        width: 100%;
-    }
-
-    .docente-sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: var(--sidebar-width);
-        background: var(--sidebar-bg);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding-top: 18px;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
-        z-index: 50;
-    }
-
-    .docente-sidebar-link {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        color: white;
-        text-decoration: none;
-        margin-bottom: 18px;
-        width: 100%;
-        padding: 6px 2px;
-        transition: opacity 0.2s ease;
-    }
-
-    .docente-sidebar-link:hover {
-        opacity: 0.85;
-    }
-
-    .docente-sidebar-icon-box {
-        width: 34px;
-        height: 34px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 4px;
-    }
-
-    .docente-main-wrapper {
-        margin-left: var(--sidebar-width);
-        width: calc(100% - var(--sidebar-width));
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .docente-topbar {
-        width: 100%;
-        height: 60px;
-        background: var(--header-bg);
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        padding: 0 30px;
-        box-sizing: border-box;
-    }
-
-    .docente-user-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .docente-prof-title {
-        color: white;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-    }
-
-    .docente-logout-link {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        color: white;
-        text-decoration: none;
-    }
-
-    .docente-avatar-svg {
-        width: 32px;
-        height: 32px;
-    }
-
-    .docente-logout-subtext {
-        font-size: 0.65rem;
-        color: rgba(255,255,255,0.9);
-    }
-
+    /* Medidas relativas (rem) en los contenedores principales: el panel
+       escala con el tamaño de fuente del dispositivo y nunca desborda. */
     .docente-centered-content {
         width: 100%;
-        max-width: 1120px;
+        max-width: 70rem;
         margin: 0 auto;
-        padding: 30px 20px 50px;
+        padding: 0.625rem 1.25rem 1.875rem;
         box-sizing: border-box;
     }
 
     .docente-content-panel {
         background: var(--main-box-bg);
-        border-radius: 16px;
-        padding: 28px 32px;
+        border-radius: 1rem;
+        padding: 1.75rem 2rem;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
     .docente-section-title {
         color: white;
-        margin: 0 0 20px;
+        margin: 0 0 1.25rem;
         font-size: 1.5rem;
         font-weight: 700;
     }
 
     .form-shell {
         background: #203f6f;
-        border-radius: 14px;
-        padding: 20px;
+        border-radius: 0.875rem;
+        padding: 1.25rem;
     }
 
     .form-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 18px 20px;
+        gap: 1.125rem 1.25rem;
     }
 
     .form-field label {
         display: block;
         color: var(--text-soft);
         font-size: 0.85rem;
-        margin-bottom: 8px;
+        margin-bottom: 0.5rem;
         font-weight: 600;
     }
 
@@ -162,7 +57,7 @@
         width: 100%;
         background: white;
         border: 1px solid rgba(148, 163, 184, 0.4);
-        border-radius: 10px;
+        border-radius: 0.625rem;
         padding: 0.8rem 0.9rem;
         color: #0f172a;
         box-sizing: border-box;
@@ -172,29 +67,29 @@
         display: block;
         color: #fca5a5;
         font-size: 0.75rem;
-        margin-top: 6px;
+        margin-top: 0.375rem;
     }
 
     .alert-error {
         background: rgba(239, 68, 68, 0.12);
         color: #fecaca;
         border: 1px solid rgba(239, 68, 68, 0.3);
-        border-radius: 10px;
+        border-radius: 0.625rem;
         padding: 0.9rem 1rem;
-        margin-bottom: 18px;
+        margin-bottom: 1.125rem;
     }
 
     .form-actions-center {
         display: flex;
         justify-content: center;
-        margin-top: 22px;
+        margin-top: 1.375rem;
     }
 
     .btn-primary {
         background: #7dd3fc;
         color: #0f172a;
         border: none;
-        border-radius: 10px;
+        border-radius: 0.625rem;
         padding: 0.8rem 1.4rem;
         font-weight: 700;
         cursor: pointer;
@@ -205,122 +100,64 @@
     }
 
     @media (max-width: 768px) {
-        :root { --sidebar-width: 60px; }
-        .docente-topbar { padding: 0 16px; }
-        .docente-prof-title { font-size: 0.7rem; }
-        .docente-centered-content { padding: 18px 10px 40px; }
-        .docente-content-panel { padding: 18px 14px; }
+        .docente-centered-content { padding: 0.5rem 0.875rem 1.25rem; }
+        .docente-content-panel { padding: 1.125rem 0.875rem; }
         .form-grid { grid-template-columns: 1fr; }
     }
 </style>
 
-<div class="docente-page-layout">
-    <aside class="docente-sidebar">
-        <a href="{% if current_user.is_authenticated %}{{ url_for('public.docente_panel') }}{% else %}{{ url_for('public.home') }}{% endif %}" class="docente-sidebar-link" title="Inicio">
-            <div class="docente-sidebar-icon-box">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6 text-white">
-                    <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
-                    <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v4.5a.75.75 0 01-.75.75H5.625c-1.036 0-1.875-.84-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
-                </svg>
-            </div>
-            <span>Inicio</span>
-        </a>
+<div class="docente-centered-content">
+    <section class="docente-content-panel">
+        <h2 class="docente-section-title">Registrar Docente</h2>
 
-        <a href="{{ url_for('public.buscar_alumno') }}" class="docente-sidebar-link" title="Buscar">
-            <div class="docente-sidebar-icon-box" style="border: 2px solid white; border-radius: 8px; width: 26px; height: 26px;">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-white">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-            </div>
-            <span>Buscar</span>
-        </a>
+        {% if error %}
+        <div class="alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
 
-        <a href="{{ url_for('public.nuevo_alumno') }}" class="docente-sidebar-link" title="Registrar Alumno">
-            <div class="docente-sidebar-icon-box">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-white">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5a3 3 0 11-6 0 3 3 0 016 0zM12 14c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5zM21 11h-4m2-2v4" />
-                </svg>
-            </div>
-            <span>Reg. Alumno</span>
-        </a>
+        <div class="form-shell">
+            <form action="" method="post" novalidate>
+                {{ form.hidden_tag() }}
+                <div class="form-grid">
+                    <div class="form-field">
+                        {{ form.name.label }}
+                        {{ form.name(class_='input-form', placeholder='Juan') }}
+                        {% for error in form.name.errors %}
+                        <span class="form-errors">{{ error }}</span>
+                        {% endfor %}
+                    </div>
 
-        <a href="{{ url_for('auth.signup') }}" class="docente-sidebar-link" title="Registrar Docente">
-            <div class="docente-sidebar-icon-box">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-white">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632zM19.5 10.5h3m-1.5-1.5v3" />
-                </svg>
-            </div>
-            <span>Reg. Docente</span>
-        </a>
-    </aside>
+                    <div class="form-field">
+                        {{ form.apellidos.label }}
+                        {{ form.apellidos(class_='input-form', placeholder='Pérez López') }}
+                        {% for error in form.apellidos.errors %}
+                        <span class="form-errors">{{ error }}</span>
+                        {% endfor %}
+                    </div>
 
-    <div class="docente-main-wrapper">
-        <header class="docente-topbar">
-            <div class="docente-user-info">
-                <span class="docente-prof-title">{{ current_user.nombre if current_user.is_authenticated and current_user.nombre else current_user.name if current_user.is_authenticated else 'Admin' }}</span>
-                <a href="{{ url_for('auth.logout') }}" class="docente-logout-link" title="Cerrar sesión">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="docente-avatar-svg">
-                        <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="docente-logout-subtext">cerrar sesión</span>
-                </a>
-            </div>
-        </header>
+                    <div class="form-field" style="grid-column: 1 / -1;">
+                        {{ form.email.label }}
+                        {{ form.email(class_='input-form', placeholder='docente@escuela.com') }}
+                        {% for error in form.email.errors %}
+                        <span class="form-errors">{{ error }}</span>
+                        {% endfor %}
+                    </div>
 
-        <main class="docente-centered-content">
-            <section class="docente-content-panel">
-                <h2 class="docente-section-title">Registrar Docente</h2>
-
-                {% if error %}
-                <div class="alert-error">
-                    {{ error }}
+                    <div class="form-field" style="grid-column: 1 / -1;">
+                        {{ form.password.label }}
+                        {{ form.password(class_='input-form', placeholder='••••••••') }}
+                        {% for error in form.password.errors %}
+                        <span class="form-errors">{{ error }}</span>
+                        {% endfor %}
+                    </div>
                 </div>
-                {% endif %}
 
-                <div class="form-shell">
-                    <form action="" method="post" novalidate>
-                        {{ form.hidden_tag() }}
-                        <div class="form-grid">
-                            <div class="form-field">
-                                {{ form.name.label }}
-                                {{ form.name(class_='input-form', placeholder='Juan') }}
-                                {% for error in form.name.errors %}
-                                <span class="form-errors">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-
-                            <div class="form-field">
-                                {{ form.apellidos.label }}
-                                {{ form.apellidos(class_='input-form', placeholder='Pérez López') }}
-                                {% for error in form.apellidos.errors %}
-                                <span class="form-errors">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-
-                            <div class="form-field" style="grid-column: 1 / -1;">
-                                {{ form.email.label }}
-                                {{ form.email(class_='input-form', placeholder='docente@escuela.com') }}
-                                {% for error in form.email.errors %}
-                                <span class="form-errors">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-
-                            <div class="form-field" style="grid-column: 1 / -1;">
-                                {{ form.password.label }}
-                                {{ form.password(class_='input-form', placeholder='••••••••') }}
-                                {% for error in form.password.errors %}
-                                <span class="form-errors">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <div class="form-actions-center">
-                            {{ form.submit(class_='btn-primary') }}
-                        </div>
-                    </form>
+                <div class="form-actions-center">
+                    {{ form.submit(class_='btn-primary') }}
                 </div>
-            </section>
-        </main>
-    </div>
+            </form>
+        </div>
+    </section>
 </div>
 {% endblock %}

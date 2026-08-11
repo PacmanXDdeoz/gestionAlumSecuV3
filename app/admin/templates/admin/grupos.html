@@ -1,11 +1,11 @@
-{% extends "base_template.html" %}
+{% extends "admin_base.html" %}
 {% block title %}Gestionar Grupos{% endblock %}
 
 {% block content %}
 <div class="admin-container">
     <div class="admin-content">
         <div class="admin-page-header">
-            <h2>📚 Gestión de Grupos</h2>
+            <h2>Gestión de Grupos</h2>
             <div>
                 <a href="{{ url_for('admin.index') }}" class="btn btn-back btn-small">← Panel</a>
                 <a href="{{ url_for('admin.create_grupo') }}" class="btn btn-small btn-warning">+ Nuevo Grupo</a>
@@ -20,11 +20,13 @@
                         <th>Grado</th>
                         <th>Grupo</th>
                         <th>Alumnos</th>
+                        <th>Materias</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for grupo in grupos %}
+                    {% set num_materias = (materias_por_grupo|default({})).get(grupo.id, 0) %}
                     <tr>
                         <td>{{ grupo.id }}</td>
                         <td><strong>{{ grupo.grado }}°</strong></td>
@@ -35,26 +37,35 @@
                             </span>
                         </td>
                         <td>
+                            <span class="badge {% if num_materias %}badge-active{% else %}badge-inactive{% endif %}"
+                                title="{{ num_materias }} materia(s) en el currículum de este grupo">
+                                {{ num_materias }} materia(s)
+                            </span>
+                        </td>
+                        <td>
                             <div class="action-buttons">
+                                <a href="{{ url_for('admin.edit_grupo_materias', grupo_id=grupo.id) }}"
+                                    class="btn btn-small btn-primary"
+                                    title="Asignar las materias que se imparten en este grupo">Materias</a>
                                 <a href="{{ url_for('admin.edit_grupo', grupo_id=grupo.id) }}"
-                                   class="btn btn-small btn-warning">Editar</a>
+                                    class="btn btn-small btn-warning">Editar</a>
                                 {% if not grupo.alumnos %}
-                                <form method="post"
-                                      action="{{ url_for('admin.delete_grupo', grupo_id=grupo.id) }}"
-                                      class="form-actions-inline"
-                                      onsubmit="return confirm('¿Eliminar permanentemente el grupo {{ grupo.grado }}° {{ grupo.grupo }}? Esta acción no se puede deshacer.');">
+                                <form method="post" action="{{ url_for('admin.delete_grupo', grupo_id=grupo.id) }}"
+                                    class="form-actions-inline"
+                                    onsubmit="return confirm('¿Eliminar permanentemente el grupo {{ grupo.grado }}° {{ grupo.grupo }}? Esta acción no se puede deshacer.');">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-small btn-danger">Eliminar</button>
                                 </form>
                                 {% else %}
-                                <span class="btn btn-small btn-gray btn-disabled" title="No se puede eliminar un grupo con alumnos asignados">Eliminar</span>
+                                <span class="btn btn-small btn-gray btn-disabled"
+                                    title="No se puede eliminar un grupo con alumnos asignados">Eliminar</span>
                                 {% endif %}
                             </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="empty-row">
+                        <td colspan="6" class="empty-row">
                             No hay grupos registrados todavía.
                         </td>
                     </tr>

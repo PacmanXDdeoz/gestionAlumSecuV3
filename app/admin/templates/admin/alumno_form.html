@@ -1,10 +1,10 @@
-{% extends "base_template.html" %}
+{% extends "admin_base.html" %}
 {% block title %}{% if alumno %}Editar{% else %}Nuevo{% endif %} Alumno{% endblock %}
 
 {% block content %}
 <div class="admin-form-container">
     <div class="admin-form-card">
-        <h2>{% if alumno %}✏️ Editar Alumno{% else %}➕ Nuevo Alumno{% endif %}</h2>
+        <h2>{% if alumno %}Editar Alumno{% else %}Nuevo Alumno{% endif %}</h2>
 
         <form action="" method="post" novalidate class="admin-form" id="alumnoForm">
             {{ form.hidden_tag() }}
@@ -55,8 +55,10 @@
             <div class="form-group" id="codigoGroup">
                 {{ form.codigo_manual.label }}
                 <div class="admin-codigo-input-row">
-                    {{ form.codigo_manual(placeholder="Ej: A7B3X9K2M1", class_="admin-codigo-input", disabled=form.auto_generar_codigo.data) }}
-                    <button type="button" id="btnGenerarCodigo" class="btn btn-small btn-back" title="Generar código aleatorio">🎲</button>
+                    {{ form.codigo_manual(placeholder="Ej: A7B3X9K2M1", class_="admin-codigo-input",
+                    disabled=form.auto_generar_codigo.data) }}
+                    <button type="button" id="btnGenerarCodigo" class="btn btn-small btn-back"
+                        title="Generar código aleatorio">🎲</button>
                 </div>
                 <span class="text-muted">Déjalo vacío si quieres que se genere automáticamente.</span>
                 {% for error in form.codigo_manual.errors %}
@@ -70,7 +72,7 @@
             </label>
 
             {% if not alumno %}
-            <div class="alert-info mt-10">
+            <div class="alert-info mt-small">
                 💡 El código QR se generará automáticamente al guardar el alumno.
             </div>
             {% endif %}
@@ -84,39 +86,39 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const chkAuto = document.getElementById('chkAutoGenerar');
-    const codigoInput = document.getElementById('codigo_manual');
-    const btnGenerar = document.getElementById('btnGenerarCodigo');
+    document.addEventListener('DOMContentLoaded', function () {
+        const chkAuto = document.getElementById('chkAutoGenerar');
+        const codigoInput = document.getElementById('codigo_manual');
+        const btnGenerar = document.getElementById('btnGenerarCodigo');
 
-    function toggleCodigoField() {
-        if (chkAuto.checked) {
-            codigoInput.disabled = true;
-            codigoInput.value = '';
-            codigoInput.placeholder = 'Se generará automáticamente';
-        } else {
-            codigoInput.disabled = false;
-            codigoInput.placeholder = 'Ej: A7B3X9K2M1';
-        }
-    }
-
-    if (chkAuto) {
-        chkAuto.addEventListener('change', toggleCodigoField);
-        toggleCodigoField();
-    }
-
-    if (btnGenerar) {
-        btnGenerar.addEventListener('click', function () {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let codigo = '';
-            for (let i = 0; i < 10; i++) {
-                codigo += chars.charAt(Math.floor(Math.random() * chars.length));
+        function toggleCodigoField() {
+            if (chkAuto.checked) {
+                codigoInput.disabled = true;
+                codigoInput.value = '';
+                codigoInput.placeholder = 'Se generará automáticamente';
+            } else {
+                codigoInput.disabled = false;
+                codigoInput.placeholder = 'Ej: A7B3X9K2M1';
             }
-            codigoInput.value = codigo;
-            codigoInput.disabled = false;
-            if (chkAuto) chkAuto.checked = false;
-        });
-    }
-});
+        }
+
+        if (chkAuto) {
+            chkAuto.addEventListener('change', toggleCodigoField);
+            toggleCodigoField();
+        }
+
+        if (btnGenerar) {
+            btnGenerar.addEventListener('click', function () {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let codigo = '';
+                for (let i = 0; i < 10; i++) {
+                    codigo += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                codigoInput.value = codigo;
+                codigoInput.disabled = false;
+                if (chkAuto) chkAuto.checked = false;
+            });
+        }
+    });
 </script>
 {% endblock %}

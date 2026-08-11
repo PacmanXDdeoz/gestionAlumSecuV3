@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}Editar Alumno — {{ alumno.full_name }} · Sistema de Gestión Escolar{% endblock %}
+
+{# Mismo tratamiento visual que la boleta (calificaciones.html): fondo azul
+   oscuro y sin footer. #}
+{% block head_extra %}
+<style>
+    body {
+        background-color: #1e3e62 !important;
+    }
+    footer {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block main_class %}flex-grow px-6 py-8 md:py-12 max-w-7xl mx-auto w-full flex flex-col gap-8{% endblock %}
+
+{% block content %}
+<!-- Encabezado de la vista -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+    <h1 class="text-3xl md:text-4xl font-semibold tracking-wide text-white">
+        Editar alumno
+        <span class="block text-base md:text-lg font-bold mt-1 text-sky-200">{{ alumno.full_name }}</span>
+    </h1>
+    <a href="{{ url_for('public.docente_panel') }}"
+       class="inline-block bg-white/10 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-white/20 transition duration-200 border border-white/20">
+        ← Volver al panel
+    </a>
+</div>
+
+<form method="post" novalidate>
+    {{ form.hidden_tag() }}
+
+    <!-- Sección Superior: Tarjetas de Información del Alumno (misma cuadrícula
+         que la boleta del alumno/tutor, con campos editables) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+
+        <!-- Tarjeta 1: Datos del alumno (editables) -->
+        <div class="bg-[#bce3ff] rounded-2xl p-5 text-slate-900 shadow-md flex flex-col justify-between min-h-[7.5rem]">
+            <span class="text-slate-800 text-xs font-bold uppercase tracking-wider block mb-3">Datos del alumno</span>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label for="{{ form.name.id }}" class="block text-xs font-bold text-slate-700 mb-1">{{ form.name.label.text }}</label>
+                    {{ form.name(class_="w-full bg-white text-slate-900 rounded-lg px-2 py-1.5 border border-slate-300 outline-none font-semibold focus:ring-2 focus:ring-sky-400") }}
+                    {% for error in form.name.errors %}<span class="text-rose-600 text-xs font-bold">{{ error }}</span>{% endfor %}
+                </div>
+                <div>
+                    <label for="{{ form.lastname_p.id }}" class="block text-xs font-bold text-slate-700 mb-1">{{ form.lastname_p.label.text }}</label>
+                    {{ form.lastname_p(class_="w-full bg-white text-slate-900 rounded-lg px-2 py-1.5 border border-slate-300 outline-none font-semibold focus:ring-2 focus:ring-sky-400") }}
+                    {% for error in form.lastname_p.errors %}<span class="text-rose-600 text-xs font-bold">{{ error }}</span>{% endfor %}
+                </div>
+                <div>
+                    <label for="{{ form.lastname_m.id }}" class="block text-xs font-bold text-slate-700 mb-1">{{ form.lastname_m.label.text }}</label>
+                    {{ form.lastname_m(class_="w-full bg-white text-slate-900 rounded-lg px-2 py-1.5 border border-slate-300 outline-none font-semibold focus:ring-2 focus:ring-sky-400") }}
+                    {% for error in form.lastname_m.errors %}<span class="text-rose-600 text-xs font-bold">{{ error }}</span>{% endfor %}
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="{{ form.genero.id }}" class="block text-xs font-bold text-slate-700 mb-1">{{ form.genero.label.text }}</label>
+                        {{ form.genero(class_="w-full bg-white text-slate-900 rounded-lg px-2 py-1.5 border border-slate-300 outline-none font-semibold focus:ring-2 focus:ring-sky-400") }}
+                        {% for error in form.genero.errors %}<span class="text-rose-600 text-xs font-bold">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div>
+                        <label for="{{ form.group_id.id }}" class="block text-xs font-bold text-slate-700 mb-1">{{ form.group_id.label.text }}</label>
+                        {{ form.group_id(class_="w-full bg-white text-slate-900 rounded-lg px-2 py-1.5 border border-slate-300 outline-none font-semibold focus:ring-2 focus:ring-sky-400") }}
+                        {% for error in form.group_id.errors %}<span class="text-rose-600 text-xs font-bold">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 2: Profesor asignado (editable: select de docentes registrados) -->
+        <div class="bg-[#bce3ff] rounded-2xl p-5 text-slate-900 shadow-md flex flex-col justify-between min-h-[7.5rem]">
+            <span class="text-slate-800 text-xs font-bold uppercase tracking-wider block mb-3">Profesor asignado</span>
+            <div class="flex flex-col gap-3 justify-center flex-grow">
+                <div>
+                    <label for="{{ form.tutor_id.id }}" class="block text-xs font-bold text-slate-700 mb-1">{{ form.tutor_id.label.text }}</label>
+                    {{ form.tutor_id(class_="w-full bg-white text-slate-900 rounded-lg px-2 py-1.5 border border-slate-300 outline-none font-semibold focus:ring-2 focus:ring-sky-400") }}
+                    {% for error in form.tutor_id.errors %}<span class="text-rose-600 text-xs font-bold">{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 3: Código de alumno (editable) -->
+        <div class="bg-white rounded-2xl p-5 text-slate-900 shadow-md border border-slate-200 flex flex-col justify-between min-h-[7.5rem]">
+            <span class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-3">Código de alumno</span>
+            <div class="flex flex-col gap-3 justify-center flex-grow">
+                <div>
+                    <label for="{{ form.password.id }}" class="block text-xs font-bold text-slate-700 mb-1">{{ form.password.label.text }}</label>
+                    {{ form.password(class_="w-full bg-white text-slate-900 rounded-lg px-2 py-1.5 border border-slate-300 outline-none font-semibold tracking-wider uppercase focus:ring-2 focus:ring-sky-400") }}
+                    {% for error in form.password.errors %}<span class="text-rose-600 text-xs font-bold">{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 4: Código QR + Descarga de PDF -->
+        <div class="bg-white rounded-2xl p-5 text-slate-900 shadow-md flex flex-col justify-between items-center min-h-[7.5rem]">
+            <span class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-1">Código QR</span>
+            {% if alumno.codigo_qr %}
+            {# El QR crece con la tarjeta (flex-1) manteniendo sus proporciones
+               y sin salirse del recuadro (max-h-full / max-w-full). #}
+            <div class="flex-1 w-full min-h-0 flex items-center justify-center py-1">
+                <img src="{{ url_for('public.servir_qr', filename=alumno.codigo_qr) }}" alt="QR del alumno"
+                     class="max-h-full max-w-full object-contain" />
+            </div>
+            {% else %}
+            <span class="text-xs text-slate-400 font-semibold">QR no disponible</span>
+            {% endif %}
+            <div class="mt-2 w-full flex flex-col gap-2 flex-shrink-0">
+                <a href="{{ url_for('public.docente_alumno_qr_pdf', alumno_id=alumno.id) }}"
+                   class="inline-flex items-center justify-center gap-2 bg-[#2563eb] text-white px-4 py-2 rounded-full font-bold text-xs hover:bg-[#1d4ed8] transition duration-200 shadow w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Descargar Código QR (PDF)
+                </a>
+                <a href="{{ url_for('public.docente_alumno_qr_imagen', alumno_id=alumno.id) }}"
+                   class="inline-flex items-center justify-center gap-2 bg-[#16a34a] text-white px-4 py-2 rounded-full font-bold text-xs hover:bg-[#15803d] transition duration-200 shadow w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A1.5 1.5 0 0021.75 19.5V4.5A1.5 1.5 0 0020.25 3H3.75A1.5 1.5 0 002.25 4.5v15A1.5 1.5 0 003.75 21z" />
+                    </svg>
+                    Descargar Código QR (Imagen)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección: Calificación de materia (mismo estilo que 'Materias y
+         calificaciones' de la boleta). El docente solo ve las materias que
+         imparte; el admin ve todas (anti-IDOR). -->
+    <div class="mt-6">
+        <h2 class="text-3xl font-bold tracking-wide mb-4">Calificar materia</h2>
+        <div class="bg-[#3b7db7] rounded-2xl p-6 shadow-lg">
+            {% if materias_disponibles %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start max-w-3xl mx-auto">
+                <div>
+                    {% set materia_actual = materias_disponibles | selectattr('id', 'equalto', materia_id_qs) | first %}
+                    {% set docentes_actuales = docentes_por_materia.get(materia_actual.nombre, []) if materia_actual else [] %}
+                    <label for="{{ form.materia_id.id }}" class="block text-xs font-bold text-slate-100 mb-1.5">{{ form.materia_id.label.text }}</label>
+                    {% if materia_bloqueada and materia_actual %}
+                    {# Materia fijada desde el roster (?materia_id=): el select
+                       queda deshabilitado (no cambiable) y el valor viaja en
+                       un input hidden porque los selects con `disabled` no se
+                       envían en el POST. #}
+                    <input type="hidden" name="materia_id" value="{{ materia_actual.id }}">
+                    {{ form.materia_id(disabled=True, class_="w-full bg-white text-slate-900 rounded-lg px-3 py-2 border border-slate-300 outline-none font-semibold opacity-70 cursor-not-allowed") }}
+                    <span class="mt-1.5 inline-flex items-center gap-1.5 text-[0.65rem] font-bold text-sky-100 uppercase tracking-wide opacity-90">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 flex-shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        Materia fijada desde el listado
+                    </span>
+                    {% else %}
+                    {{ form.materia_id(class_="w-full bg-white text-slate-900 rounded-lg px-3 py-2 border border-slate-300 outline-none font-semibold focus:ring-2 focus:ring-sky-400") }}
+                    {% endif %}
+                    {# Docentes que imparten la materia seleccionada (misma
+                       fuente que la boleta: horarios del grupo del alumno).
+                       El estado inicial se sirve desde el servidor y el JS
+                       (bloque scripts) lo actualiza al cambiar el select. #}
+                    <div id="imparte-materia" class="mt-1 text-xs font-semibold text-sky-100 {{ 'opacity-80' if not docentes_actuales }}">
+                        {% if docentes_actuales %}Imparte: {{ docentes_actuales | join(', ') }}{% else %}No hay docentes asignados en el horario del grupo.{% endif %}
+                    </div>
+                    {# Slot de error con altura reservada: el mensaje aparece sin
+                       mover la estructura (el contenedor existe siempre, con o
+                       sin error, y ambos campos quedan alineados arriba). #}
+                    <div class="min-h-[1.5rem] mt-1">
+                        {% for error in form.materia_id.errors %}<span class="block text-rose-300 text-xs font-bold">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+                <div>
+                    <label for="{{ form.calificacion.id }}" class="block text-xs font-bold text-slate-100 mb-1.5">{{ form.calificacion.label.text }}</label>
+                    {{ form.calificacion(class_="w-full bg-white text-slate-900 rounded-lg px-3 py-2 border border-slate-300 outline-none font-semibold focus:ring-2 focus:ring-sky-400", placeholder="Ej. 9.5", step="0.1", min="0", max="10") }}
+                    <div class="min-h-[1.5rem] mt-1">
+                        {% for error in form.calificacion.errors %}<span class="block text-rose-300 text-xs font-bold">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="{{ form.nota_texto.id }}" class="block text-xs font-bold text-slate-100 mb-1.5">{{ form.nota_texto.label.text }}</label>
+                    {{ form.nota_texto(class_="w-full bg-white text-slate-900 rounded-lg px-3 py-2 border border-slate-300 outline-none font-semibold focus:ring-2 focus:ring-sky-400", rows="2", placeholder="Comentario que compartirás con el alumno para esta materia (opcional)") }}
+                    <div class="min-h-[1.5rem] mt-1">
+                        {% for error in form.nota_texto.errors %}<span class="block text-rose-300 text-xs font-bold">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+            </div>
+            <p class="text-slate-100 text-xs font-semibold text-center mt-4 opacity-80">
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    Puedes calificar cualquier materia del catálogo.
+                {% else %}
+                    Solo puedes calificar las materias que impartes.
+                {% endif %}
+                La calificación se guarda junto con los datos del alumno.
+            </p>
+            {% else %}
+            <p class="text-white font-medium text-center">No tienes materias asignadas para calificar a este alumno.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Acciones del formulario (centradas) -->
+    <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+        <a href="{{ url_for('public.docente_panel') }}"
+           class="inline-block bg-white/10 text-white px-8 py-3 rounded-full font-bold text-sm hover:bg-white/20 transition duration-200 border border-white/20 text-center w-full sm:w-auto">
+            Cancelar
+        </a>
+        {{ form.submit(class_='inline-block bg-[#54d2f8] text-slate-950 px-8 py-3 rounded-full font-bold text-sm hover:bg-[#3ec3ea] transition duration-200 shadow border-none cursor-pointer w-full sm:w-auto') }}
+    </div>
+</form>
+{% endblock %}
+
+{# ── Docentes que imparten la materia seleccionada (horario del grupo) ──
+   Al cambiar el select de materia se actualiza la línea 'Imparte: …' sin
+   recargar la página. El mapa viene del servidor (docentes_por_materia).
+   Se declara al nivel superior del template (no anidado en content) para
+   que Jinja lo resuelva contra el bloque scripts de base.html. #}
+{% block scripts %}
+<script>
+    (function () {
+        var select = document.getElementById('materia_id');
+        var target = document.getElementById('imparte-materia');
+        if (!select || !target) return;
+        // Materia fijada desde el roster: el select está disabled y la línea
+        // 'Imparte:' ya se sirvió con el estado correcto; no puede cambiar.
+        if (select.disabled) return;
+        var mapa = {{ docentes_por_materia | tojson }};
+
+        function actualizar() {
+            var opt = select.options[select.selectedIndex];
+            var nombre = opt ? opt.textContent.trim() : '';
+            var docentes = mapa[nombre] || [];
+            if (docentes.length) {
+                target.textContent = 'Imparte: ' + docentes.join(', ');
+                target.classList.remove('opacity-80');
+            } else {
+                target.textContent = 'No hay docentes asignados en el horario del grupo.';
+                target.classList.add('opacity-80');
+            }
+        }
+
+        select.addEventListener('change', actualizar);
+        actualizar();
+    })();
+</script>
+{% endblock %}

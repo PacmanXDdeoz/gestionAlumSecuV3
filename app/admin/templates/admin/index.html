@@ -1,14 +1,13 @@
-{% extends "base_template.html" %}
+{% extends "admin_base.html" %}
 {% block title %}Panel de Administración{% endblock %}
 
 {% block content %}
 <div class="admin-container">
     <div class="admin-content">
         <div class="admin-page-header">
-            <h2>📊 Panel de Administración</h2>
+            <h2>Panel de Administración</h2>
             <div>
                 <a href="{{ url_for('public.docente_panel') }}" class="btn btn-back btn-small">← Panel Docente</a>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-small btn-danger">Cerrar sesión</a>
             </div>
         </div>
 
@@ -34,24 +33,52 @@
         <h3 class="section-title-light">Accesos rápidos</h3>
         <div class="admin-quick-links">
             <div class="quick-link-card">
-                <div class="link-icon">📋</div>
+                <div class="link-icon">
+                    <svg class="nav-icon text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-6 5h6m-6 4h6M10 3v4h4V3h-4Z"/>
+                    </svg>
+                </div>
                 <a href="{{ url_for('admin.list_alumnos') }}">Gestionar Alumnos</a>
             </div>
             <div class="quick-link-card">
-                <div class="link-icon">➕</div>
+                <div class="link-icon">
+                    <svg class="nav-icon text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12h4m-2 2v-4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                    </svg>
+                </div>
                 <a href="{{ url_for('admin.create_alumno') }}">Nuevo Alumno</a>
             </div>
             <div class="quick-link-card">
-                <div class="link-icon">👥</div>
+                <div class="link-icon">
+                    <svg class="nav-icon text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5713 5h7v9h-7m-6.00001-4-3 4.5m3-4.5v5m0-5h3.00001m0 0h5m-5 0v5m-3.00001 0h3.00001m-3.00001 0v5m3.00001-5v5m6-6 2.5 6m-3-6-2.5 6m-3-14.5c0 .82843-.67158 1.5-1.50001 1.5-.82843 0-1.5-.67157-1.5-1.5s.67157-1.5 1.5-1.5 1.50001.67157 1.50001 1.5Z"/>
+                    </svg>
+                </div>
                 <a href="{{ url_for('admin.list_docentes') }}">Gestionar Docentes</a>
             </div>
             <div class="quick-link-card">
-                <div class="link-icon">➕</div>
+                <div class="link-icon">
+                    <svg class="nav-icon text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                    </svg>
+                </div>
                 <a href="{{ url_for('admin.create_docente') }}">Nuevo Docente</a>
             </div>
             <div class="quick-link-card">
-                <div class="link-icon">📚</div>
+                <div class="link-icon">
+                    <svg class="nav-icon text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.5 17H4a1 1 0 0 1-1-1 3 3 0 0 1 3-3h1m0-3.05A2.5 2.5 0 1 1 9 5.5M19.5 17h.5a1 1 0 0 0 1-1 3 3 0 0 0-3-3h-1m0-3.05a2.5 2.5 0 1 0-2-4.45m.5 13.5h-7a1 1 0 0 1-1-1 3 3 0 0 1 3-3h3a3 3 0 0 1 3 3 1 1 0 0 1-1 1Zm-1-9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"/>
+                    </svg>
+                </div>
                 <a href="{{ url_for('admin.list_grupos') }}">Gestionar Grupos</a>
+            </div>
+            <div class="quick-link-card">
+                <div class="link-icon">
+                    <svg class="nav-icon text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                </div>
+                <a href="{{ url_for('admin.list_horarios') }}">Gestionar Horarios</a>
             </div>
         </div>
     </div>

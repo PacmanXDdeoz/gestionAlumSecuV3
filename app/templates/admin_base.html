@@ -1,0 +1,23 @@
+{# Plantilla base del panel de administración.
+   Extiende la plantilla maestra base.html para heredar el MISMO estándar
+   visual del resto de la aplicación: fondo animado, sidebar y barra de
+   header. Carga admin.css únicamente para las clases admin-* (tablas,
+   tarjetas y formularios del panel). #}
+{% extends "base.html" %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+<style>
+    /* El fondo del admin lo pone base.html (slate oscuro + ondas animadas),
+       igual que el resto del panel. Se neutraliza el gradiente que admin.css
+       aplica al body (que se conserva para las páginas de error 401/404/500). */
+    body {
+        background: transparent;
+        background-attachment: scroll;
+    }
+</style>
+{% endblock %}
+
+{# El main del layout estándar ya centra el contenido; el contenedor admin
+   se ajusta en admin.css para fluir dentro de él sin min-height propio. #}
+{% block main_class %}flex-grow w-full{% endblock %}

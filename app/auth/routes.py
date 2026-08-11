@@ -4,24 +4,16 @@ from urllib.parse import urlparse
 
 from app import login_manager
 from . import auth_bp
+from .decorators import admin_required
 from .forms import SignupForm, LoginForm
-from .models import Docente
+from .models import Docente, Rol
 
 
 @auth_bp.route("/signup/", methods=["GET", "POST"])
 @auth_bp.route("/docente/nuevo", methods=["GET", "POST"])
+@admin_required
 def signup():
     """Solo el admin puede crear nuevos docentes."""
-    if not current_user.is_authenticated:
-        return redirect(url_for('auth.login'))
-
-    is_admin_user = getattr(current_user, 'is_admin', False) or (
-        getattr(current_user, 'email', '').lower() == 'admin@example.com'
-    )
-    if not is_admin_user:
-        flash('No tienes permisos para registrar usuarios.', 'error')
-        return redirect(url_for('public.docente_panel'))
-
     form = SignupForm()
     error = None
     if form.validate_on_submit():
@@ -53,6 +45,8 @@ def login():
             error = 'Email o contraseña incorrectos.'
         elif not docente.estatus:
             error = 'Tu cuenta está desactivada. Contacta al administrador.'
+        elif not Rol.es_valido(docente.rol):
+            error = 'Tu cuenta tiene un rol no autorizado. Contacta al administrador.'
         else:
             login_user(docente, remember=form.remember_me.data)
             next_page = request.args.get('next')

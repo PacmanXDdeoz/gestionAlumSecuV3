@@ -7,8 +7,10 @@ env.bak/
 venv.bak/
 
 # Secretos y configuración
+db_uri.secret
 .db_uri.secret
 .env
+.env.prod
 .flaskenv
 
 # Byte-compiled / optimized / DLL files
@@ -20,6 +22,16 @@ __pycache__/
 *.sqlite
 *.db
 dev.db
+
+# Configuración de testing con credenciales locales (ver .env.example)
+instance/
+
+# Dumps de seguridad de la base de datos
+backups/
+
+# Códigos QR generados (artefactos regenerables con `flask regenerate-qrs`)
+app/static/qrcodes/
+
 
 # Logs
 *.log

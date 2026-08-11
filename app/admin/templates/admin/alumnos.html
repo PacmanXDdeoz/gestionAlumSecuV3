@@ -1,20 +1,26 @@
-{% extends "base_template.html" %}
+{% extends "admin_base.html" %}
 {% block title %}Gestión de Alumnos{% endblock %}
 
 {% block content %}
 <div class="admin-container">
     <div class="admin-content">
         <div class="admin-page-header">
-            <h2>📋 Gestión de Alumnos</h2>
+            <h2>Gestión de Alumnos</h2>
             <div>
                 <a href="{{ url_for('admin.index') }}" class="btn btn-back btn-small">← Panel</a>
                 <a href="{{ url_for('admin.create_alumno') }}" class="btn btn-warning btn-small">+ Nuevo Alumno</a>
             </div>
         </div>
 
-        <!-- Filtro en tiempo real -->
+        <!-- Filtro en tiempo real (icono de lupa SVG en lugar del emoji) -->
         <div class="admin-filter-bar">
-            <input type="text" id="filtroAlumnos" class="admin-filter-input" placeholder="🔍 Buscar por nombre, código o grupo..." autocomplete="off">
+            <div class="admin-search-wrap">
+                <svg class="admin-search-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
+                </svg>
+                <input type="text" id="filtroAlumnos" class="admin-filter-input"
+                    placeholder="Buscar por nombre, código o grupo..." autocomplete="off">
+            </div>
         </div>
 
         <div class="admin-table-wrapper">
@@ -32,7 +38,8 @@
                 </thead>
                 <tbody>
                     {% for alumno in alumnos %}
-                    <tr class="alumno-row" data-search="{{ alumno.name }} {{ alumno.lastname_p }} {{ alumno.lastname_m }} {{ alumno.password }} {{ alumno.grupo_info.grado }}°{{ alumno.grupo_info.grupo }}">
+                    <tr class="alumno-row"
+                        data-search="{{ alumno.name }} {{ alumno.lastname_p }} {{ alumno.lastname_m }} {{ alumno.password }} {{ alumno.grupo_info.grado }}°{{ alumno.grupo_info.grupo }}">
                         <td>{{ alumno.id }}</td>
                         <td><strong>{{ alumno.name }} {{ alumno.lastname_p }} {{ alumno.lastname_m }}</strong></td>
                         <td>{{ alumno.genero }}</td>
@@ -48,14 +55,29 @@
                         <td>
                             <div class="action-buttons">
                                 <a href="{{ url_for('admin.edit_alumno', alumno_id=alumno.id) }}"
-                                   class="btn btn-small btn-warning" title="Editar">✏️ Editar</a>
-                                <form method="post"
-                                      action="{{ url_for('admin.baja_alumno', alumno_id=alumno.id) }}"
-                                      class="form-actions-inline"
-                                      onsubmit="return confirm('¿{{ 'Dar de baja' if alumno.status else 'Reactivar' }} a {{ alumno.name }}?');">
+                                    class="btn btn-small btn-warning" title="Editar">
+                                    <svg class="nav-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                    </svg>
+                                    Editar
+                                </a>
+                                <form method="post" action="{{ url_for('admin.baja_alumno', alumno_id=alumno.id) }}"
+                                    class="form-actions-inline"
+                                    onsubmit="return confirm('¿{{ 'Dar de baja' if alumno.status else 'Reactivar' }} a {{ alumno.name }}?');">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-small {{ 'btn-danger' if alumno.status else 'btn-back' }}">
-                                        {{ '🗑️ Baja' if alumno.status else '✅ Alta' }}
+                                    <button type="submit"
+                                        class="btn btn-small {{ 'btn-danger' if alumno.status else 'btn-back' }}">
+                                        {% if alumno.status %}
+                                        <svg class="nav-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                        </svg>
+                                        Baja
+                                        {% else %}
+                                        <svg class="nav-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                        Alta
+                                        {% endif %}
                                     </button>
                                 </form>
                             </div>
@@ -75,28 +97,28 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const filtro = document.getElementById('filtroAlumnos');
-    const rows = document.querySelectorAll('.alumno-row');
-    const totalSpan = document.getElementById('totalCount');
+    document.addEventListener('DOMContentLoaded', function () {
+        const filtro = document.getElementById('filtroAlumnos');
+        const rows = document.querySelectorAll('.alumno-row');
+        const totalSpan = document.getElementById('totalCount');
 
-    if (filtro) {
-        filtro.addEventListener('input', function () {
-            const query = this.value.trim().toLowerCase();
-            let visible = 0;
+        if (filtro) {
+            filtro.addEventListener('input', function () {
+                const query = this.value.trim().toLowerCase();
+                let visible = 0;
 
-            rows.forEach(function (row) {
-                const searchData = row.dataset.search ? row.dataset.search.toLowerCase() : '';
-                const matches = query === '' || searchData.includes(query);
-                row.style.display = matches ? '' : 'none';
-                if (matches) visible++;
+                rows.forEach(function (row) {
+                    const searchData = row.dataset.search ? row.dataset.search.toLowerCase() : '';
+                    const matches = query === '' || searchData.includes(query);
+                    row.style.display = matches ? '' : 'none';
+                    if (matches) visible++;
+                });
+
+                if (totalSpan) {
+                    totalSpan.textContent = 'Mostrando: ' + visible + ' de ' + rows.length + ' alumno(s)';
+                }
             });
-
-            if (totalSpan) {
-                totalSpan.textContent = 'Mostrando: ' + visible + ' de ' + rows.length + ' alumno(s)';
-            }
-        });
-    }
-});
+        }
+    });
 </script>
 {% endblock %}

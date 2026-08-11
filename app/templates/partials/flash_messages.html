@@ -1,0 +1,22 @@
+{# Mensajes flash con desvanecimiento automático. #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        <script>
+            setTimeout(function() {
+                var container = document.querySelector('.flash-messages');
+                if (container) {
+                    container.style.opacity = '0';
+                    container.style.transition = 'opacity 0.5s';
+                    setTimeout(function() { container.remove(); }, 500);
+                }
+            }, 4000);
+        </script>
+    {% endif %}
+{% endwith %}

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{% block title %}{% endblock %}</title>
+    <style>
+        body {
+            min-height: 100vh;
+        }
+
+        .flash-messages {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .flash-message {
+            padding: 1rem 1.25rem;
+            border-radius: 1rem;
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.15);
+        }
+
+        .flash-message.success { background: #16a34a; }
+        .flash-message.error { background: #dc2626; }
+
+        .bg-animated {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10;
+            opacity: 0.45;
+        }
+
+        footer {
+            position: relative;
+            z-index: 10;
+            padding: 1rem 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+        }
+
+        /* El crédito del footer (subtítulo) se oculta en pantallas
+           pequeñas para que el texto nunca se corte ni desborde. */
+        @media (max-width: 640px) {
+            .footer-credit { display: none; }
+            footer { font-size: 0.85rem; }
+        }
+
+        /* ── Sidebar off-canvas en móvil (hamburguesa) ────────────────────
+           En pantallas < md el sidebar queda fuera de la vista (translateX
+           -100%) y se despliega con el botón hamburguesa (z-50, por encima
+           del sidebar y del backdrop). En escritorio vuelve a su posición
+           estática normal sin transformación. */
+        #mainSidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        body.sidebar-open #mainSidebar {
+            transform: translateX(0);
+        }
+
+        #sidebarBackdrop {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        body.sidebar-open #sidebarBackdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        @media (min-width: 768px) {
+            #mainSidebar {
+                transform: none;
+            }
+        }
+
+        /* Icono del botón hamburguesa: se alterna a una X cuando el
+           sidebar está abierto. */
+        #sidebarToggle .icon-close { display: none; }
+        body.sidebar-open #sidebarToggle .icon-open { display: none; }
+        body.sidebar-open #sidebarToggle .icon-close { display: block; }
+
+        /* ── SVG: mantener proporciones sin importar el contenedor ──────────
+           Evita que los iconos se vean estirados o distorsionados cuando el
+           contenedor los estira (flex, grid, etc.). Requiere que cada icono
+           declare su viewBox (así lo hacen todos los del proyecto).
+           La altura se deriva del viewBox para respetar la relación de
+           aspecto; el ancho lo controla cada utilidad (w-*, max-width). */
+        svg {
+            display: inline-block;
+            vertical-align: middle;
+            max-width: 100%;
+            flex-shrink: 0;
+        }
+
+        svg[viewBox] {
+            height: auto;
+        }
+
+        /* El fondo animado es a pantalla completa: conserva su tamaño. */
+        svg.bg-animated {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* ── Iconos de navegación: tamaño estandarizado y proporcional ──
+           Iconos del sidebar (partials/sidebar.html, bloque sidebar_extra) y
+           del header (partials/header.html: perfil / cerrar sesión). Usan
+           svg.nav-icon; el tamaño crece con el ancho de pantalla (móvil →
+           escritorio). El selector svg.nav-icon gana a svg[viewBox] (misma
+           especificidad y se declara después), fijando también la altura. */
+        svg.nav-icon {
+            width: 1.4rem;
+            height: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            svg.nav-icon {
+                width: 1.7rem;
+                height: 1.7rem;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            svg.nav-icon {
+                width: 2rem;
+                height: 2rem;
+            }
+        }
+
+        /* Iconos dentro de botones (p. ej. ✏️ Editar, Baja/Alta del admin):
+           más pequeños que los de navegación para mantener proporción con
+           el texto del botón. Especificidad mayor que svg.nav-icon, así que
+           gana sobre el tamaño estándar. */
+        .btn .nav-icon {
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+
+        @media (min-width: 768px) {
+            .btn .nav-icon {
+                width: 1.3rem;
+                height: 1.3rem;
+            }
+        }
+
+        /* ── Mobile-first: contenidos fluidos sin desbordes ───────────────
+           Imágenes/vídeos nunca desbordan su contenedor y las tablas
+           anchas (roster, horario, admin) desplazan horizontalmente dentro
+           de su caja con scroll suave en pantallas táctiles. */
+        img, video, canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .overflow-x-auto, .docente-table-box, .admin-table-wrapper {
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        /* Los mensajes flash no deben desbordar en pantallas pequeñas. */
+        @media (max-width: 640px) {
+            .flash-messages {
+                left: 1rem;
+                right: 1rem;
+                top: 0.75rem;
+            }
+        }
+    </style>
+    {% block head_extra %}{% endblock %}
+</head>
+
+<body class="bg-slate-950 text-slate-100 overflow-x-hidden">
+    {# ── 1. Fondo animado (extraído a partial) ─────────────────────────── #}
+    {% block background %}{% include 'partials/background.html' %}{% endblock %}
+
+    {# ── 2. Mensajes flash (extraídos a partial) ───────────────────────── #}
+    {% block flash_messages %}{% include 'partials/flash_messages.html' %}{% endblock %}
+
+    {# ── 3. Layout por defecto: panel con sidebar + header + contenido. ──
+         Las vistas que usan el panel solo definen {% block content %} y
+         (opcionalmente) {% block main_class %}.
+         Las vistas con estructura propia (p. ej. las páginas de error
+         401/404/500) sobrescriben {% block layout %} para desactivar el
+         panel y renderizar solo su contenido + pie. ─────────────────── #}
+    {% block layout %}
+    <div class="flex min-h-screen text-white font-sans">
+        {# ── Botón hamburguesa (solo móvil): abre el sidebar off-canvas ── #}
+        <button type="button" id="sidebarToggle"
+                class="fixed top-2.5 left-3 z-50 md:hidden w-11 h-11 flex items-center justify-center rounded-xl bg-[#3b7db7] text-white shadow-lg hover:bg-[#3572a3] transition duration-200"
+                aria-label="Abrir menú" aria-expanded="false" aria-controls="mainSidebar">
+            <svg class="icon-open w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+            </svg>
+            <svg class="icon-close w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        {% block sidebar %}
+        <aside id="mainSidebar"
+               class="fixed inset-y-0 left-0 z-40 w-20 md:w-24 md:static md:z-20 bg-[#4292d6] flex flex-col items-center pt-14 pb-8 md:py-8 gap-8 flex-shrink-0 shadow-lg overflow-y-auto"
+               aria-label="Menú principal">
+            {% include 'partials/sidebar.html' %}
+            {# Botones extra por vista (p. ej. 'Listado general' en el panel
+               docente). Los define cada plantilla hija que los necesite; así
+               el partial no depende de rutas concretas. #}
+            {% block sidebar_extra %}{% endblock %}
+
+            {# ── Logo de la escuela (anclado al pie del sidebar) ──────── #}
+            <div class="mt-auto flex flex-col items-center gap-1.5 w-full px-2 pt-4">
+                <img src="{{ url_for('static', filename='images/image_1.png') }}"
+                     alt="Logo de la escuela"
+                     class="w-12 h-12 md:w-14 md:h-14 object-contain rounded-full bg-white/95 p-0.5 shadow-md"
+                     loading="lazy">
+            </div>
+        </aside>
+        {% endblock %}
+
+        {# ── Fondo oscuro (solo móvil) para cerrar el sidebar al tocar ── #}
+        <div id="sidebarBackdrop" class="fixed inset-0 z-30 bg-black/50 md:hidden"></div>
+
+        <div class="flex-1 flex flex-col min-h-screen min-w-0">
+            {% block header %}{% include 'partials/header.html' %}{% endblock %}
+
+            <main class="{% block main_class %}flex-grow px-6 py-8 md:py-12 max-w-7xl mx-auto w-full{% endblock %}">
+                {% block content %}{% endblock %}
+            </main>
+
+            {# ── Footer dentro de la columna de contenido: nunca se corta
+                 ni se superpone con el sidebar. El subtítulo se oculta en
+                 pantallas muy pequeñas (ver CSS arriba). ── #}
+            {% block footer %}
+            <footer>
+                <p>Sistema de Gestión Escolar<span class="footer-credit"> — Prof. Alejandra Vázquez Cruz</span></p>
+            </footer>
+            {% endblock %}
+        </div>
+    </div>
+    {% endblock %}
+
+    <script>
+        // ── Sidebar off-canvas en móvil (hamburguesa) ────────────────────
+        (function () {
+            var body = document.body;
+            var sidebar = document.getElementById('mainSidebar');
+            var toggle = document.getElementById('sidebarToggle');
+            var backdrop = document.getElementById('sidebarBackdrop');
+            if (!sidebar || !toggle) return;
+
+            function isOpen() {
+                return body.classList.contains('sidebar-open');
+            }
+
+            function setOpen(open) {
+                body.classList.toggle('sidebar-open', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+            }
+
+            toggle.addEventListener('click', function () {
+                setOpen(!isOpen());
+            });
+            if (backdrop) {
+                backdrop.addEventListener('click', function () {
+                    setOpen(false);
+                });
+            }
+            // Al pasar a escritorio se restablece el estado (evita un
+            // sidebar oculto por el estado móvil residual).
+            window.addEventListener('resize', function () {
+                if (window.innerWidth >= 768) setOpen(false);
+            });
+        })();
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>
