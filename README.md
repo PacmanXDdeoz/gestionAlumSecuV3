@@ -118,6 +118,10 @@ Se configura en **una sola variable** del archivo `.env`:
   recomendada para testeo con el celular en la red local.
 - **Vacía** → se usa el host de la petición (útil en producción detrás de un
   dominio real).
+- **Guard anti-placeholder**: si el valor contiene `<` (p. ej. el template
+  `https://<tu-app>.onrender.com` copiado a Render sin editar), se trata
+  como vacía: el QR usa el host real de la petición y nunca codifica un
+  placeholder.
 
 > ⚠️ En testeo local el servidor debe escuchar en esa dirección para que el
 > celular pueda abrir la URL del QR:

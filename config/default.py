@@ -84,6 +84,13 @@ DATABASE_URI_LOCAL = os.environ.get('DATABASE_URI_LOCAL', '').strip()
 # contexto de request (comando ``flask regenerate-qrs``). En web, url_for
 # usa el host de la petición; esta es solo el respaldo determinista.
 PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', '').strip()
+# Guard anti-placeholder: si llega literalmente un valor con '<' (p. ej. el
+# template 'https://<tu-app>.onrender.com' copiado a Render sin editar), se
+# trata como NO configurada: en web el QR usa el host real de la petición y
+# nunca codifica un placeholder. Fuera de request, ``regenerate-qrs`` avisa
+# que falta la variable en lugar de generar URLs rotas.
+if '<' in PUBLIC_BASE_URL:
+    PUBLIC_BASE_URL = ''
 
 # Carpeta donde se guardan los QRs de los alumnos. Por defecto
 # ``<static>/qrcodes`` (carpeta del proyecto). Se puede redirigir a otra
