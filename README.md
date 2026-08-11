@@ -24,7 +24,7 @@ subas `.env` al repositorio). La aplicación también acepta `db_uri.secret`
 
 ### Instalación de dependencias
 
-    pip install -r requeriments.txt
+    pip install -r requirements.txt
 
 ## Ejecución con el servidor que trae Flask
 
@@ -311,10 +311,10 @@ apuntando a tu PostgreSQL remoto (AlwaysData).
 
 ### Build command (limpio)
 
-`gunicorn` ya está en `requeriments.txt`, así que el build solo instala
+`gunicorn` ya está en `requirements.txt`, así que el build solo instala
 dependencias y aplica las migraciones:
 
-    pip install -r requeriments.txt && flask db upgrade
+    pip install -r requirements.txt && flask db upgrade
 
 ### Start command
 
@@ -322,7 +322,10 @@ dependencias y aplica las migraciones:
 
 ### Runtime
 
-- **Runtime**: Python 3 (Render usa 3.12, la misma versión del proyecto).
+- **Runtime**: Python 3 fijado por `runtime.txt` en la raíz
+  (`python-3.12.3`): Render usa 3.12, la misma versión del proyecto y donde
+  están validadas las dependencias pinneadas (no usar el Python 3.14 por
+  defecto de Render: `psycopg2-binary` y `Pillow` no tienen wheels para él).
 - **Plan**: Free (se duerme a los 15 min de inactividad; la primera petición
   tarda ~50 s en "despertar") o Starter para uso continuo.
 
