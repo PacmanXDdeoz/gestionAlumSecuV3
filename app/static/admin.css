@@ -348,6 +348,19 @@ label {
     font-size: 1rem;
 }
 
+/* El botón de acciones (Regenerar QRs) dentro de una tarjeta rápida se ve
+   igual que el enlace de las demás tarjetas. */
+.quick-link-card button {
+    border: none;
+    background: none;
+    padding: 0;
+    color: #1a5276;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: inherit;
+}
+
 .quick-link-card .link-icon {
     /* Los iconos son SVG con la clase nav-icon (tamaños proporcionales en
        base.html). Flex centra el icono horizontalmente sin depender de

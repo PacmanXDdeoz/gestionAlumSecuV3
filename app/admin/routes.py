@@ -551,3 +551,37 @@ def delete_horario(horario_id):
     horario.delete()
     flash('Entrada de horario eliminada.', 'success')
     return redirect(url_for('admin.list_horarios'))
+
+
+# ──────────────────────────────────────────────
+#  MANTENIMIENTO
+# ──────────────────────────────────────────────
+
+@admin_bp.route("/admin/qrs/regenerar/", methods=['POST'])
+@login_required
+@admin_required
+def regenerar_qrs():
+    """Regenera los QRs de todos los alumnos con el dominio actual.
+
+    Corre en el servidor (el filesystem real de Render): los PNGs se
+    reescriben con la URL actual (``PUBLIC_BASE_URL`` o el host de la
+    petición) y se eliminan los huérfanos de alumnos ya borrados. Útil tras
+    cambiar el dominio de la app (deploy temporal → dominio real) sin
+    necesidad de la Shell de Render.
+    """
+    from app.utils.qr import regenerar_todos_qrs
+
+    resultado = regenerar_todos_qrs()
+    if resultado['alumnos']:
+        flash(
+            f'QRs regenerados para {resultado["alumnos"]} alumno(s) '
+            f'({resultado["huerfanos"]} huérfano(s) eliminado(s)).',
+            'success',
+        )
+    else:
+        flash(
+            f'No hay alumnos registrados. '
+            f'({resultado["huerfanos"]} huérfano(s) eliminado(s)).',
+            'success',
+        )
+    return redirect(url_for('admin.index'))

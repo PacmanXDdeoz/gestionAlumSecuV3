@@ -183,37 +183,16 @@ def regenerate_qrs_command():
     tabla ``alumnos``), de modo que la carpeta refleje siempre el estado
     real y nunca muestre QRs de alumnos eliminados.
     """
-    import re
+    from app.utils.qr import regenerar_todos_qrs
 
-    from app.utils.qr import qr_codes_folder
-
-    alumnos = Alumno.query.all()
-    if alumnos:
-        for a in alumnos:
-            a.generate_qr_code()
-        click.echo(f'✓ QRs regenerados para {len(alumnos)} alumno(s).')
+    resultado = regenerar_todos_qrs()
+    if resultado['alumnos']:
+        click.echo(f'✓ QRs regenerados para {resultado["alumnos"]} alumno(s).')
     else:
         click.echo('No hay alumnos registrados.')
 
-    # ── Sweep de QRs huérfanos ─────────────────────────────────────
-    # Misma resolución de carpeta que Alumno.generate_qr_code (fuente
-    # única: app.utils.qr.qr_codes_folder).
-    carpeta = qr_codes_folder()
-    if not carpeta.is_dir():
-        click.echo('No existe la carpeta de QRs; nada que limpiar.')
-        return
-
-    ids_existentes = {a.id for a in alumnos}
-    patron = re.compile(r'^alumno_(\d+)\.png$')
-    eliminados = 0
-    for archivo in carpeta.glob('alumno_*.png'):
-        m = patron.match(archivo.name)
-        if m and int(m.group(1)) not in ids_existentes:
-            archivo.unlink()
-            eliminados += 1
-
-    if eliminados:
-        click.echo(f'🗑  Eliminados {eliminados} QR(s) huérfano(s) de alumnos ya eliminados.')
+    if resultado['huerfanos']:
+        click.echo(f'🗑  Eliminados {resultado["huerfanos"]} QR(s) huérfano(s) de alumnos ya eliminados.')
     else:
         click.echo('No hay QRs huérfanos que limpiar.')
 

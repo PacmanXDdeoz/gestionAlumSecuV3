@@ -49,3 +49,34 @@ def generar_qr(texto, directorio, nombre_archivo):
         )
     imagen.save(ruta, format='PNG', optimize=True)
     return f'{directorio.name}/{nombre_archivo}'
+
+
+def regenerar_todos_qrs():
+    """Regenera el QR de todos los alumnos y elimina los PNGs huérfanos.
+
+    Lógica compartida del comando ``flask regenerate-qrs`` y de la acción
+    ``admin.regenerar_qrs`` del panel: reescribe los PNGs con la URL actual
+    (``PUBLIC_BASE_URL`` o, dentro de un request, el host de la petición) y
+    barre la carpeta de QRs eliminando archivos de alumnos ya borrados.
+
+    :return: ``{'alumnos': n, 'huerfanos': m}`` con los conteos.
+    """
+    import re
+
+    from app.models import Alumno
+
+    alumnos = Alumno.query.all()
+    for a in alumnos:
+        a.generate_qr_code()
+
+    ids_existentes = {a.id for a in alumnos}
+    carpeta = qr_codes_folder()
+    huerfanos = 0
+    if carpeta.is_dir():
+        patron = re.compile(r'^alumno_(\d+)\.png$')
+        for archivo in carpeta.glob('alumno_*.png'):
+            m = patron.match(archivo.name)
+            if m and int(m.group(1)) not in ids_existentes:
+                archivo.unlink()
+                huerfanos += 1
+    return {'alumnos': len(alumnos), 'huerfanos': huerfanos}

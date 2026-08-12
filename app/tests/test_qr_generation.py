@@ -46,6 +46,7 @@ class QRGenerationTestCase(unittest.TestCase):
             # Limpieza dirigida: solo los datos creados por este test
             Alumno.query.filter_by(name='Juan').delete()
             Docente.query.filter_by(email='test@example.com').delete()
+            Docente.query.filter_by(email='admin_qr@example.com').delete()
             Grupos.query.filter_by(grado='9', grupo='Q').delete()
             db.session.commit()
             db.session.remove()
@@ -140,6 +141,50 @@ class QRGenerationTestCase(unittest.TestCase):
 
         self.assertEqual(200, self.client.get(url_ok).status_code)
         self.assertEqual(404, self.client.get('/qr/..%2F..%2Fetc%2Fpasswd').status_code)
+
+    def _crear_admin(self):
+        """Crea y loguea un admin (rol=1 del catálogo, email único del test)."""
+        with self.app.app_context():
+            Docente.query.filter_by(email='admin_qr@example.com').delete()
+            db.session.commit()
+            admin = Docente(name='Admin QR', email='admin_qr@example.com', rol=1)
+            admin.set_password('123456')
+            admin.save()
+        return self.client.post('/login', data={
+            'email': 'admin_qr@example.com',
+            'password': '123456',
+        }, follow_redirects=False)
+
+    def test_admin_regenerar_qrs(self):
+        """El botón del admin regenera los QRs con el dominio actual y barre huérfanos."""
+        from pathlib import Path
+
+        self.app.config['PUBLIC_BASE_URL'] = 'https://midominio.com'
+        with self.app.app_context():
+            grupo = db.session.get(Grupos, self.grupo_id)
+            alumno = Alumno(name='Juan', lastname_p='Admin', lastname_m='Test',
+                            group_id=grupo.id, genero='M', password='QRADMIN01')
+            db.session.add(alumno)
+            db.session.flush()
+            alumno.generate_qr_code()
+            id_alumno = alumno.id
+
+        carpeta = Path(self.app.config['QR_CODES_FOLDER'])
+        huerfano = carpeta / 'alumno_99999.png'
+        huerfano.write_bytes(b'qr huerfano')
+
+        self._crear_admin()
+        r = self.client.post('/admin/qrs/regenerar/', follow_redirects=True)
+        self.assertEqual(200, r.status_code)
+        self.assertIn(b'QRs regenerados', r.data)
+        self.assertTrue((carpeta / f'alumno_{id_alumno}.png').exists())
+        self.assertFalse(huerfano.exists(), 'El QR huérfano debe eliminarse')
+
+    def test_admin_regenerar_qrs_rechaza_no_admin(self):
+        """Un docente sin rol admin no puede regenerar QRs (401)."""
+        self._login()  # docente con rol=2 (test@example.com)
+        r = self.client.post('/admin/qrs/regenerar/')
+        self.assertEqual(401, r.status_code)
 
     def test_qr_codifica_url_absoluta_de_la_boleta(self):
         """El QR codifica la URL /buscar/<id> (escaneo nativo), no el ID crudo."""

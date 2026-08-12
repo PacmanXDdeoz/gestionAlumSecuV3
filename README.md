@@ -170,6 +170,11 @@ regeneren. Un solo comando hace ambas tareas:
 
     flask regenerate-qrs
 
+> 💡 **Sin acceso a la Shell de Render (plan Free)?** También puedes
+> regenerarlos desde la interfaz: `/admin/` → **Mantenimiento → Regenerar
+> QRs**. La acción corre en el servidor, reescribe los PNGs con el dominio
+> actual y barre los huérfanos, sin necesidad de comandos.
+
 1. **Regenera** los QRs de todos los alumnos existentes con el formato/dominio
    actual (requiere `PUBLIC_BASE_URL` en `.env` o ejecutarse dentro de un
    request).
